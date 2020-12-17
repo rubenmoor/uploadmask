@@ -10,15 +10,21 @@
 
 module Model where
 
-import Database.Persist
-import Database.Persist.Sql
-import Database.Persist.TH
 import Data.Text
+import Data.Time (UTCTime)
+
+import Database.Persist
+import Database.Persist.Sqlite
+import Database.Persist.TH
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Episode
-  title Text
-  audioFile FilePath
-  thumbnailFile FilePath
-  description Text
+  title            Text
+  slug             Text
+  audioFile        FilePath
+  audioContentType Text
+  thumbnailFile    FilePath
+  description      Text
+  duration         Int           -- duration in seconds
+  pubdate          UTCTime
 |]
