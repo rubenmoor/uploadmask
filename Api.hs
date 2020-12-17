@@ -6,7 +6,7 @@
 
 module Api
   ( api
-  , Episode (..)
+  , EpisodeUpload (..)
   ) where
 
 import           Data.Proxy
@@ -18,16 +18,25 @@ import           Servant.Multipart
 import           Servant.Server
 import           Text.Blaze.Html         (Html)
 
-import           Prelude                 (FilePath, String, id, (.))
+import           Prelude                 (FilePath, String, id, (.), (<$>), (<*>), fmap)
 
-data Episode = Episode
+data EpisodeUpload = EpisodeUpload
     { epTitle :: Text
-    , epFile  :: FilePath
+    , epAudioFile  :: FilePath
+    , epDescription :: Text
+    , epThumbnailFile :: FilePath
     }
+
+instance FromMultipart Tmp EpisodeUpload where
+  fromMultipart formdata =
+    EpisodeUpload <$> lookupInput "title" formdata
+                  <*> fmap fdPayload (lookupFile "audioFile" formdata)
+                  <*> lookupInput "description" formdata
+                  <*> fmap fdPayload (lookupFile "thumbnailFile" formdata)
 
 type API = "feed.xml" :> Get '[XML] Lazy.ByteString
       :<|> "upload"   :> Get '[HTML] Lazy.ByteString
-      :<|> "upload"   :> MultipartForm Tmp (MultipartData Tmp) :> Post '[PlainText] String
+      :<|> "upload"   :> MultipartForm Tmp EpisodeUpload :> Post '[PlainText] String
 
 data HTML
 
