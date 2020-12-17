@@ -7,63 +7,70 @@
      version="2.0">
 
     <channel>
-        <title>Völlig irrelevant</title>
-        <link>https://podcast.rubenmoor.net/</link>
+        <title>#{title}</title>
+        <link>#{link}</link>
         <language>en-us</language>
-        <atom:link href="https://podcast.rubenmoor.net/feed.xml"
+        <atom:link href="#{link}/feed.xml"
                    rel="self"
                    type="application/rss+xml"/>
-        <copyright>Ruben Moor &amp; Lucas Weiß</copyright>
-        <description>Wir reden hier über Themen</description>
-        <managingEditor>ruben.moor@gmail.com (Ruben Moor)</managingEditor>
-        <webMaster>ruben.moor@gmail.com (Ruben Moor)</webMaster>
+        <copyright>#{copyright}</copyright>
+        <description>#{description}</description>
+        <managingEditor>#{email}</managingEditor>
+        <webMaster>#{email}</webMaster>
         <creativeCommons:license>https://creativecommons.org/licenses/by-nc-nd/4.0/</creativeCommons:license>
-        <pubDate>Thu, 17 Dec 2020 02:00:00 GMT</pubDate>
-        <lastBuildDate>Thu, 17 Dec 2020 02:00:00 GMT</lastBuildDate>
+        <pubDate>#{pubDate}</pubDate>
+        <lastBuildDate>#{latestDate}</lastBuildDate>
         <image>
-            <url>https://podcast.rubenmoor.net/microphone.jpg</url>
-            <title>Völlig irrelevant</title>
-            <link>https://podcast.rubenmoor.net</link>
+            <url>#{img}</url>
+            <title>#{title}</title>
+            <link>#{link}</link>
         </image>
         <docs>http://www.rssboard.org/rss-specification</docs>
-        <itunes:subtitle>Höre Rubm und Luke beim Denken zu</itunes:subtitle>
-        <itunes:author>Rubm &amp; Luke</itunes:author>
-        <itunes:summary>Wir reden hier über Themen.</itunes:summary>
+        <itunes:subtitle>#{itunesSubtitle}</itunes:subtitle>
+        <itunes:author>#{authors}</itunes:author>
+        <itunes:summary>#{itunesSummary}</itunes:summary>
         <itunes:keywords>Philosophie, Moral, Kolumbien</itunes:keywords>
         <itunes:block>yes</itunes:block>
         <itunes:owner>
-            <itunes:name><![CDATA[Rubm & Luke]]></itunes:name>
-            <itunes:email>ruben.moor@gmail.com</itunes:email>
+            <itunes:name><![CDATA[#{authors}]]></itunes:name>
+            <itunes:email>#{email}</itunes:email>
         </itunes:owner>
-        <itunes:image href="https://podcast.rubenmoor.net/microphone.jpg" />
+        <itunes:image href="#{img}" />
         <itunes:category text="Technology" />
         <itunes:explicit>no</itunes:explicit>
+        %{ forall episode <- episodes }
         <item>
-            <title>Die Nullte Episode</title>
-            <link>https://podcast.rubenmoor.net</link>
+            <title>#{episodeTitle episode}</title>
+            <link>#{link}/#{episodeSlug episode}</link>
             <description>
-                Ein Mikrophon-Test mit Inhalt
+                #{episodeDescription episode}
             </description>
-            <guid isPermaLink="false">https://podcast.rubenmoor.net</guid>
-            <pubDate>17 Nov 2020 23:00:00 GMT</pubDate>
+            <guid isPermaLink="false">#{link}/#{episodeSlug episode}</guid>
+            <pubDate>#{episodePubdate episode}</pubDate>
             <media:content
                 medium="audio"
-                url="https://podcast.rubenmoor.net/media/2020-11-17%20FULL%20SERENDIPITY.m4a"
-                type="audio/mp4"
+                url="#{link}/#{episodeAudioFile episode}"
+                type="#{episodeAudioContentType episode}"
                 isDefault="true"
-                duration="2666">
+                duration="#{episodeDuration episode}">
             </media:content>
-            <media:title type="plain">Die Nullte Episode</media:title>
+            <media:title type="plain">#{episodeTitle episode}</media:title>
             <media:description>
-                Ein Mikrophon-Test mit Inhalt
+                #{episodeDescription episode}
             </media:description>
             <media:rating scheme="urn:simple">adult</media:rating>
-            <media:thumbnail url="https://podcast.rubenmoor.net/microphone.jpg"/>
             <media:keywords>moral</media:keywords>
-            <enclosure url="https://podcast.rubenmoor.net/media/2020-11-17%20FULL%20SERENDIPITY.m4a" length="44320615" type="audio/mp4" />
-            <itunes:image href="https://podcast.rubenmoor.net/microphone.jpg" />
+            <enclosure url="#{link}/#{episodeAudioFile episode}" length="#{episodeFileSize episode}" type="#{episodeAudioContentType episode}" />
+            %{ if (episodeThumbnailFile episode == "") }
+            <media:thumbnail url="#{link}/#{defaultThumbnail}"/>
+            <itunes:image href="#{link}/#{defaultThumbnail}" />
+            %{ else }
+            <media:thumbnail url="#{link}/#{episodeThumbnailFile episode}"/>
+            <itunes:image href="#{link}/#{episodeThumbnailFile episode}" />
+            %{ endif }
             <itunes:duration>00:44:26</itunes:duration>
             <itunes:explicit>yes</itunes:explicit>
         </item>
+        %{ endforall }
     </channel>
 </rss>

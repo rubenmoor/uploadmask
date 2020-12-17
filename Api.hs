@@ -9,34 +9,42 @@ module Api
   , EpisodeUpload (..)
   ) where
 
+import qualified Data.ByteString.Lazy as Lazy
 import           Data.Proxy
-import           Data.Text               (Text)
-import qualified Data.ByteString.Lazy          as Lazy
-import           Network.HTTP.Media      ((//), (/:))
+import           Data.Text            (Text)
+import Data.Text.Read (decimal)
+import           Network.HTTP.Media   ((//), (/:))
 import           Servant.API
 import           Servant.Multipart
 import           Servant.Server
-import           Text.Blaze.Html         (Html)
+import           Text.Blaze.Html      (Html)
 
-import           Prelude                 (FilePath, String, id, (.), (<$>), (<*>), fmap)
+import           Prelude              (Either (..), Maybe (..), Int, FilePath, String, fmap, id, (.), (<$>),
+                                       (<*>))
 
 data EpisodeUpload = EpisodeUpload
-    { epTitle :: Text
-    , epAudioFile  :: FilePath
-    , epAudioFilename :: Text
-    , epDescription :: Text
-    , epThumbnailFile :: FilePath
-    , epThumbnailFilename :: Text
-    , epAudioContentType :: Text
+    { uploadTitle             :: Text
+    , uploadAudioFile         :: FilePath
+    , uploadAudioFilename     :: Text
+    -- audio duration in seconds
+    , uploadDuration          :: Int -- audio duration in seconds
+    , uploadDescription       :: Text
+    , uploadThumbnailFile     :: FilePath
+    , uploadThumbnailFilename :: Text
+    , uploadAudioContentType  :: Text
     }
 
 instance FromMultipart Tmp EpisodeUpload where
   fromMultipart formdata =
     let audioFile = lookupFile "audioFile" formdata
         thumbnailFile = lookupFile "thumbnailFile" formdata
+        duration = case decimal <$> lookupInput "duration" formdata of
+          Just (Right (d, _)) -> Just d
+          _                   -> Nothing
     in  EpisodeUpload <$> lookupInput "title" formdata
                       <*> fmap fdPayload audioFile
                       <*> fmap fdFileName audioFile
+                      <*> duration
                       <*> lookupInput "description" formdata
                       <*> fmap fdPayload thumbnailFile
                       <*> fmap fdFileName thumbnailFile

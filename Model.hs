@@ -26,5 +26,8 @@ Episode
   thumbnailFile    FilePath
   description      Text
   duration         Int           -- duration in seconds
-  pubdate          UTCTime
+  durationColons   Text
+  fileSize         Int           -- file size in bytes
+  created          UTCTime
+  pubdate          Text          -- rfc822 formatted time
 |]

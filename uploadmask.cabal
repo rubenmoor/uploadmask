@@ -29,9 +29,12 @@ executable uploadmask
                      , bytestring
                      , directory
                      , filepath
+                     , gerippe
                      , heterocephalus
                      , http-media
                      , monad-logger
+                     , mtl
+                     , optparse-applicative
                      , persistent
                      , persistent-template
                      , persistent-sqlite
@@ -45,6 +48,7 @@ executable uploadmask
                      , time
                      , timerep
                      , transformers
+                     , unix
                      , warp
   -- hs-source-dirs:
   default-language:    Haskell2010
