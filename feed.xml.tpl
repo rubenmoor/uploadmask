@@ -8,9 +8,9 @@
 
     <channel>
         <title>#{title}</title>
-        <link>#{link}</link>
+        <link>#{protocol}#{podcastLink}</link>
         <language>en-us</language>
-        <atom:link href="#{link}/feed.xml"
+        <atom:link href="#{protocol}#{podcastLink}/feed.xml"
                    rel="self"
                    type="application/rss+xml"/>
         <copyright>#{copyright}</copyright>
@@ -21,9 +21,9 @@
         <pubDate>#{pubDate}</pubDate>
         <lastBuildDate>#{latestDate}</lastBuildDate>
         <image>
-            <url>#{img}</url>
+            <url>#{mediaLink}/#{img}</url>
             <title>#{title}</title>
-            <link>#{link}</link>
+            <link>#{protocol}#{podcastLink}</link>
         </image>
         <docs>http://www.rssboard.org/rss-specification</docs>
         <itunes:subtitle>#{itunesSubtitle}</itunes:subtitle>
@@ -32,43 +32,34 @@
         <itunes:keywords>Philosophie, Moral, Kolumbien</itunes:keywords>
         <itunes:block>yes</itunes:block>
         <itunes:owner>
-            <itunes:name><![CDATA[#{authors}]]></itunes:name>
+            <itunes:name><![CDATA[#{itunesOwnerNames}]]></itunes:name>
             <itunes:email>#{email}</itunes:email>
         </itunes:owner>
-        <itunes:image href="#{img}" />
+        <itunes:image href="#{mediaLink}/#{img}" />
         <itunes:category text="Technology" />
         <itunes:explicit>no</itunes:explicit>
-        %{ forall episode <- episodes }
+        %{ forall efd <- episodeData }
         <item>
-            <title>#{episodeTitle episode}</title>
-            <link>#{link}/#{episodeSlug episode}</link>
-            <description>
-                #{episodeDescription episode}
-            </description>
-            <guid isPermaLink="false">#{link}/#{episodeSlug episode}</guid>
-            <pubDate>#{episodePubdate episode}</pubDate>
+            <title>#{efdTitle efd}</title>
+            <link>#{efdPageUrl efd}</link>
+            <description>#{efdDescription efd}</description>
+            <guid isPermaLink="false">#{efdPageUrl efd}</guid>
+            <pubDate>#{efdRFC822 efd}</pubDate>
             <media:content
                 medium="audio"
-                url="#{link}/#{episodeAudioFile episode}"
-                type="#{episodeAudioContentType episode}"
+                url="#{efdAudioFileUrl efd}"
+                type="#{efdAudioContentType efd}"
                 isDefault="true"
-                duration="#{episodeDuration episode}">
+                duration="#{efdDurationSeconds efd}">
             </media:content>
-            <media:title type="plain">#{episodeTitle episode}</media:title>
-            <media:description>
-                #{episodeDescription episode}
-            </media:description>
+            <media:title type="plain">#{efdTitle efd}</media:title>
+            <media:description>#{efdDescription efd}</media:description>
             <media:rating scheme="urn:simple">adult</media:rating>
             <media:keywords>moral</media:keywords>
-            <enclosure url="#{link}/#{episodeAudioFile episode}" length="#{episodeFileSize episode}" type="#{episodeAudioContentType episode}" />
-            %{ if (episodeThumbnailFile episode == "") }
-            <media:thumbnail url="#{link}/#{defaultThumbnail}"/>
-            <itunes:image href="#{link}/#{defaultThumbnail}" />
-            %{ else }
-            <media:thumbnail url="#{link}/#{episodeThumbnailFile episode}"/>
-            <itunes:image href="#{link}/#{episodeThumbnailFile episode}" />
-            %{ endif }
-            <itunes:duration>00:44:26</itunes:duration>
+            <enclosure url="#{efdAudioFileUrl efd}" length="#{efdFileSize efd}" type="#{efdAudioContentType efd}" />
+            <media:thumbnail url="#{efdThumbnailFile efd}"/>
+            <itunes:image href="#{efdThumbnailFile efd}" />
+            <itunes:duration>#{efdDurationFormatted efd}</itunes:duration>
             <itunes:explicit>yes</itunes:explicit>
         </item>
         %{ endforall }

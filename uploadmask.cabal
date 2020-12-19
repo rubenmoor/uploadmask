@@ -4,7 +4,7 @@ cabal-version:       >=1.10
 -- http://haskell.org/cabal/users-guide/
 
 name:                uploadmask
-version:             0.1.0.0
+version:             0.9.0.0
 -- synopsis:
 -- description:
 -- bug-reports:
@@ -20,6 +20,7 @@ extra-source-files:  CHANGELOG.md
 executable uploadmask
   main-is:             Main.hs
   other-modules:       Api
+                     , Hosting
                      , Html
                      , Model
   -- other-extensions:
@@ -37,10 +38,11 @@ executable uploadmask
                      , optparse-applicative
                      , persistent
                      , persistent-template
-                     , persistent-sqlite
+                     , persistent-mysql-haskell
                      , raw-strings-qq
                      , resource-pool
                      , resourcet
+                     , safe
                      , servant
                      , servant-multipart
                      , servant-server

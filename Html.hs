@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
@@ -6,17 +7,23 @@ module Html
   ( uploadForm
   ) where
 
+import           Control.Monad               (forM_)
 import           Data.Text                   (Text)
+import           Data.Time.Format            (defaultTimeLocale, formatTime)
 import           Text.Blaze.Html             (Html)
 import           Text.Blaze.Html5
-import           Text.Blaze.Html5.Attributes hiding (form, label, style, title)
+import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
+                                              title)
 import qualified Text.Blaze.Html5.Attributes as A
 import           Text.RawString.QQ
 
+import Hosting (mkFileUrl)
+import           Model                       (Episode (..))
+
 import           Prelude                     (($))
 
-myStyle :: Html
-myStyle = [r|
+styleUpload :: Html
+styleUpload = [r|
 body {
   font-family: sans-serif;
 }
@@ -40,10 +47,43 @@ textarea#description {
 div#submit {
   text-align: right;
 }
+progress#progressBar {
+  width: 400px;
+}
 |]
 
 myScript :: Html
 myScript = [r|
+  formSubmit = function() {
+    var form = document.getElementById("form")
+    var xhr = new XMLHttpRequest()
+    var progressBar = document.getElementById("progressBar")
+    var errorSpan = document.getElementById("errorMessage")
+
+    xhr.upload.addEventListener("progress", function(evt){
+      if (evt.lengthComputable) {
+        var percent = evt.loaded / evt.total * 100
+        progressBar.value = Math.round(percent)
+      }
+    }, false)
+
+    xhr.onload = function() {
+      window.location.href = '/?msg=' + xhr.response
+    }
+    xhr.upload.addEventListener("error", function(e) {
+      errorSpan.textContent = "upload failed"
+    });
+    xhr.upload.addEventListener("abort", function(e) {
+      errorSpan.textContent = "upload cancelled"
+    });
+
+    xhr.open("post", "")
+    xhr.send(new FormData(form))
+    for(var i = 0; i < form.elements.length; i++) {
+      form.elements[i].disabled = true
+    }
+  }
+
   window.onload = function() {
     const audioFileInput = document.getElementById("audioFile")
     audioFileInput.onchange = async (evt) => {
@@ -58,6 +98,7 @@ myScript = [r|
       const audio_track = info.media.track.find( (track) => track[ "@type" ] === "Audio" )
       inputDuration.value = Math.round(audio_track.Duration)
     }
+
   }
 |]
 
@@ -67,11 +108,11 @@ uploadForm = docTypeHtml $ do
     meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
     meta ! content "utf-8" ! httpEquiv "encoding"
     title "Upload new episode"
-    style myStyle
+    style styleUpload
     script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
     script myScript
   body $
-    form ! action "" ! method "post" ! enctype "multipart/form-data" $ do
+    form ! action "" ! method "post" ! enctype "multipart/form-data" ! id "form" $ do
       div $ do
         label ! for "title" $ "Title: "
         br
@@ -80,6 +121,8 @@ uploadForm = docTypeHtml $ do
         label ! for "audioFile" $ "Audio file: "
         br
         input ! type_ "file" ! name "audioFile" ! id "audioFile"
+        br
+        progress ! id "progressBar" ! value "0" ! max "100" $ ""
       div $ do
         label ! for "duration" $ "Audio duration in seconds: "
         br
@@ -94,4 +137,23 @@ uploadForm = docTypeHtml $ do
         input ! type_ "file" ! name "thumbnailFile"
       div ! id "submit" $ do
         hr
-        input ! type_ "submit" ! value "submit"
+        span ! id "errorMessage" ! A.style "color: red" $ ""
+        button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
+
+styleHomepage :: Html
+styleHomepage = ""
+
+homepage :: [Episode] -> Html
+homepage episodes = docTypeHtml $ do
+  head $ do
+    meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
+    meta ! content "utf-8" ! httpEquiv "encoding"
+    title "Völlig irrelevant - Der Podcast"
+    style styleHomepage
+  body $ forM_ episodes $ \Episode{..} -> do
+    div $ do
+      h1 $ text episodeTitle
+      div $ string $ formatTime defaultTimeLocale "%F" episodeCreated
+      audio ! controls "controls" ! preload "none" $
+        source ! src (textValue $ mkFileUrl episodeFtExtension $ episodeSlug)
+      div $ text episodeDescription

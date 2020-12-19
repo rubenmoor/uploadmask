@@ -11,7 +11,6 @@
 
 module Main where
 
-import Options.Applicative
 import           Control.Monad                 (unless, when)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Logger          (NoLoggingT (..), runNoLoggingT)
@@ -32,12 +31,14 @@ import           Data.Time.Format              (defaultTimeLocale, formatTime,
                                                 rfc822DateFormat)
 import           Data.Time.LocalTime           (getZonedTime)
 import           Database.Persist              (insert)
-import           Database.Persist.Sqlite       (SqlBackend, SqlPersistT,
+import           Database.Persist.MySQL        (SqlBackend, SqlPersistT,
+                                                mkMySQLConnectInfo,
                                                 runMigration, runSqlPool,
-                                                runSqlite, withSqlitePool)
-import           Model                         (Episode (..), episodePubdate,
-                                                migrateAll)
+                                                withMySQLPool)
+import           Model                         (Episode (..), migrateAll)
 import           Network.Wai.Handler.Warp      (defaultSettings, run)
+import           Options.Applicative
+import           Safe                          (headMay)
 import           Servant                       ((:<|>) (..), Application,
                                                 err400, throwError)
 import qualified Servant
@@ -53,23 +54,24 @@ import           Text.Heterocephalus
 import           Text.Printf                   (printf)
 
 import           Api                           (EpisodeUpload (..), api)
-import           Database.Gerippe              ((%), BaseBackend, Entity,
+import           Database.Gerippe              (BaseBackend, Entity,
                                                 IsPersistBackend,
                                                 PersistEntityBackend, entityVal,
-                                                getAll)
+                                                getAll, (%))
+import           Hosting                       (mediaDir, mediaLink, mkFileUrl,
+                                                podcastLink, protocol)
 import           Html                          (uploadForm)
 import qualified Model
 
-import           Prelude                       ((*), (/), Int, FilePath, IO, String, flip,
-                                                fromIntegral, map, putStrLn,
-                                                return, ($), (.), (/=), (<$>),
-                                                (<>), (==), mod, div)
+import           Prelude                       (FilePath, IO, Int, Maybe (..),
+                                                String, div, flip, fromIntegral,
+                                                map, mod, putStrLn, return,
+                                                show, ($), (*), (.), (/), (/=),
+                                                (<$>), (<>), (==))
 
 type AppState = Pool SqlBackend
 
 type Handler = ReaderT AppState Servant.Handler
-mediaDir :: FilePath
-mediaDir = "media"
 
 app :: AppState -> Application
 app state = serve api $ hoistServer api (flip runReaderT state) $
@@ -84,22 +86,20 @@ formatDuration :: Int -> Text
 formatDuration d =
   let seconds = d `mod` 60
       minutes = (d `div` 60) `mod` 60
-      hours = d `mod` (60 * 60)
+      hours = d `div` (60 * 60)
   in  Text.pack $ printf "%02d:%02d:%02d" hours minutes seconds
 
 handleUpload :: EpisodeUpload -> Handler String
 handleUpload EpisodeUpload{..} = do
   now <- liftIO getCurrentTime
-  when (uploadAudioFilename == "") $
+  when (uploadAudioFilename == "\"\"") $
     throwError $ err400 { errBody = "audio file field mandatory" }
-  let rfc822 = formatTime defaultTimeLocale rfc822DateFormat now
-      date = Text.pack $ formatTime defaultTimeLocale "%F" now
+  let date = Text.pack $ formatTime defaultTimeLocale "%F" now
       slug = date <> "_" <> convertToFilename (toUpper uploadTitle)
-      audioFile = slug <> Text.pack (takeExtensions $ Text.unpack uploadAudioFilename)
-
+      episodeFtExtension = Text.pack $ takeExtensions $ Text.unpack uploadAudioFilename
+      audioFile = mediaDir </> Text.unpack slug <> Text.unpack episodeFtExtension
       -- fill Model.episode
       episodeTitle = uploadTitle
-      episodeAudioFile = mediaDir </> Text.unpack audioFile
       episodeThumbnailFile =
         if uploadThumbnailFilename /= "\"\""
         then mediaDir </> Text.unpack (slug
@@ -109,20 +109,53 @@ handleUpload EpisodeUpload{..} = do
       episodeAudioContentType = uploadAudioContentType
       episodeSlug = slug
       episodeDuration = uploadDuration
-      episodeDurationColons = formatDuration uploadDuration
       episodeCreated = now
-      episodePubdate = Text.pack rfc822
   episodeFileSize <- liftIO $ fromIntegral . fileSize <$> getFileStatus uploadAudioFile
   let episode = Model.Episode{..}
-  pool <- ask
   liftIO $ do
-    putStrLn $ "Copying " <> uploadAudioFile <> " to " <> episodeAudioFile
-    copyFile uploadAudioFile episodeAudioFile
+    putStrLn $ "Copying " <> uploadAudioFile <> " to " <> audioFile
+    copyFile uploadAudioFile audioFile
     unless (uploadThumbnailFilename == "\"\"") $ do
       putStrLn $ "Filename: " <> Text.unpack uploadThumbnailFilename <> ". Copying " <> uploadThumbnailFile <> " to " <> episodeThumbnailFile
       copyFile uploadThumbnailFile episodeThumbnailFile
-    flip runSqlPool pool $ insert episode
+  runDb $ insert episode
   return $ Text.unpack uploadAudioContentType
+
+data EpisodeFeedData = EpisodeFeedData
+    { efdRFC822            :: Text
+    , efdSlug              :: Text
+    -- filetype extension (.m4a)
+    , efdFtExtension       :: Text -- filetype extension (.m4a)
+    , efdAudioFileUrl      :: Text
+    , efdPageUrl           :: Text
+    , efdTitle             :: Text
+    , efdThumbnailFile     :: Text
+    , efdDescription       :: Text
+    , efdAudioContentType  :: Text
+    , efdDurationSeconds   :: Int
+    , efdDurationFormatted :: Text
+    , efdFileSize          :: Int
+    }
+
+getEpisodeFeedData :: Model.Episode -> EpisodeFeedData
+getEpisodeFeedData Model.Episode{..} =
+  let efdRFC822 = replace "UTC" "UT" $
+        Text.pack $ formatTime defaultTimeLocale rfc822DateFormat episodeCreated
+      efdSlug = episodeSlug
+      efdFtExtension = episodeFtExtension
+      efdAudioFileUrl = mkFileUrl efdFtExtension efdSlug
+      efdPageUrl = protocol <> podcastLink <> "/" <> efdSlug
+      efdTitle = episodeTitle
+      efdThumbnailFile = protocol <> mediaLink <> "/" <>
+        if episodeThumbnailFile == ""
+        then "microphone.jpg"
+        else Text.pack episodeThumbnailFile
+      efdDescription = episodeDescription
+      efdAudioContentType = episodeAudioContentType
+      efdDurationSeconds = episodeDuration
+      efdDurationFormatted = formatDuration episodeDuration
+      efdFileSize = episodeFileSize
+  in  EpisodeFeedData{..}
 
 runDb ::
    (MonadIO m, IsPersistBackend backend, BaseBackend backend ~ SqlBackend) =>
@@ -136,26 +169,26 @@ handleFeedXML = do
   episodeList <- map entityVal <$> runDb getAll
   let contents = renderMarkup (
         let title = "völlig irrelevant" :: Text
-            mediaDir = mediaDir
-            link = "https://podcast.rubenmoor.net" :: Text
-            img = "media/microphone.jpg" :: Text
+            img = "microphone.jpg" :: Text
             description = "Wir reden hier über Themen" :: Text
             copyright = "Ruben Moor & Lucas Weiß" :: Text
             email = "ruben.moor@gmail.com (Ruben Moor)" :: Text
             pubDate = "Thu, 17 Dec 2020 02:00:00 GMT" :: Text
-            -- TODO
-            latestDate = "Thu, 17 Dec 2020 02:00:00 GMT" :: Text
             itunesSubtitle = "Wir reden hier über Themen (Subtitle)" :: Text
             itunesSummary = "Wir reden hier über Themen (Summary)" :: Text
             authors = "Luke & Rubm" :: Text
-            defaultThumbnail = "media/microphone.jpg" :: Text
-            episodes = sortBy (comparing $ Down . episodeCreated) episodeList
+            itunesOwnerNames = "Luke and Rubm" :: Text
+            episodeData = getEpisodeFeedData <$>
+              sortBy (comparing $ Down . episodeCreated) episodeList
+            latestDate = case headMay episodeData of
+              Just efd -> efdRFC822 efd
+              Nothing  -> pubDate
         in  $(compileHtmlFile "feed.xml.tpl"))
   return contents
 
 data Options = Options
-  { optPort :: Int
-  }
+    { optPort :: Int
+    }
 
 optParse :: Parser Options
 optParse = Options <$> option auto (
@@ -173,7 +206,13 @@ main = do
        fullDesc
     <> progDesc "Welcome to the homepage server of the podcast project"
     )
-  runNoLoggingT $ withSqlitePool "podcasts.db" 10 $ \pool -> do
+  putStrLn $ "Serving at port " <> show optPort
+  let connectInfo = mkMySQLConnectInfo
+        "mysql"
+        "podcast"
+        "HwEGjT3hQhs2"
+        "podcast"
+  runNoLoggingT $ withMySQLPool connectInfo 10 $ \pool -> do
     runResourceT $ flip runSqlPool pool $ runMigration migrateAll
     NoLoggingT $ run optPort $ app pool
 
