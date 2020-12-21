@@ -103,43 +103,48 @@ myScript = [r|
   }
 |]
 
-uploadForm :: Html
-uploadForm = docTypeHtml $ do
-  head $ do
-    meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
-    meta ! content "utf-8" ! httpEquiv "encoding"
-    title "Upload new episode"
-    style styleUpload
-    script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
-    script myScript
-  body $
-    form ! action "" ! method "post" ! enctype "multipart/form-data" ! id "form" $ do
-      div $ do
-        label ! for "title" $ "Title: "
-        br
-        input ! type_ "text" ! name "title" ! id "title"
-      div $ do
-        label ! for "audioFile" $ "Audio file: "
-        br
-        input ! type_ "file" ! name "audioFile" ! id "audioFile"
-        br
-        progress ! id "progressBar" ! value "0" ! max "100" $ ""
-      div $ do
-        label ! for "duration" $ "Audio duration in seconds: "
-        br
-        input ! type_ "text" ! name "duration" ! id "duration" ! readonly "readonly"
-      div $ do
-        label ! for "description" $ "Description: "
-        br
-        textarea ! name "description" ! id "description" $ ""
-      div $ do
-        label ! for "thumbnailFile" $ "Thumbnail file (optional): "
-        br
-        input ! type_ "file" ! name "thumbnailFile"
-      div ! id "submit" $ do
-        hr
-        span ! id "errorMessage" ! A.style "color: red" $ ""
-        button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
+uploadForm :: Text -> Html
+uploadForm today =
+  docTypeHtml $ do
+    head $ do
+      meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
+      meta ! content "utf-8" ! httpEquiv "encoding"
+      title "Upload new episode"
+      style styleUpload
+      script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
+      script myScript
+    body $
+      form ! action "" ! method "post" ! enctype "multipart/form-data" ! id "form" $ do
+        div $ do
+          label ! for "title" $ "Title: "
+          br
+          input ! type_ "text" ! name "title" ! id "title"
+        div $  do
+          label ! for "date" $ "Date: "
+          br
+          input ! type_ "text" ! name "date" ! value (textValue today)
+        div $ do
+          label ! for "audioFile" $ "Audio file: "
+          br
+          input ! type_ "file" ! name "audioFile" ! id "audioFile"
+          br
+          progress ! id "progressBar" ! value "0" ! max "100" $ ""
+        div $ do
+          label ! for "duration" $ "Audio duration in seconds: "
+          br
+          input ! type_ "text" ! name "duration" ! id "duration" ! readonly "readonly"
+        div $ do
+          label ! for "description" $ "Description: "
+          br
+          textarea ! name "description" ! id "description" $ ""
+        div $ do
+          label ! for "thumbnailFile" $ "Thumbnail file (optional): "
+          br
+          input ! type_ "file" ! name "thumbnailFile"
+        div ! id "submit" $ do
+          hr
+          span ! id "errorMessage" ! A.style "color: red" $ ""
+          button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
 
 styleHomepage :: Html
 styleHomepage = ""
@@ -154,7 +159,7 @@ homepage episodes = docTypeHtml $ do
   body $ forM_ episodes $ \Episode{..} -> do
     div $ do
       h1 $ text episodeTitle
-      div $ string $ formatTime defaultTimeLocale "%F" episodeCreated
+      div $ string $ formatTime defaultTimeLocale "%F" episodePubdate
       audio ! controls "controls" ! preload "none" $
         source ! src (textValue $ mkFileUrl episodeFtExtension $ episodeSlug)
       div $ text episodeDescription

@@ -12,18 +12,19 @@ module Api
 import qualified Data.ByteString.Lazy as Lazy
 import           Data.Proxy
 import           Data.Text            (Text)
-import Data.Text.Read (decimal)
+import           Data.Text.Read       (decimal)
 import           Network.HTTP.Media   ((//), (/:))
 import           Servant.API
 import           Servant.Multipart
 import           Servant.Server
 import           Text.Blaze.Html      (Html)
 
-import           Prelude              (Either (..), Maybe (..), Int, FilePath, String, fmap, id, (.), (<$>),
-                                       (<*>))
+import           Prelude              (Either (..), FilePath, Int, Maybe (..),
+                                       String, fmap, id, (.), (<$>), (<*>))
 
 data EpisodeUpload = EpisodeUpload
     { uploadTitle             :: Text
+    , uploadDate              :: Text
     , uploadAudioFile         :: FilePath
     , uploadAudioFilename     :: Text
     -- audio duration in seconds
@@ -42,6 +43,7 @@ instance FromMultipart Tmp EpisodeUpload where
           Just (Right (d, _)) -> Just d
           _                   -> Nothing
     in  EpisodeUpload <$> lookupInput "title" formdata
+                      <*> lookupInput "date" formdata
                       <*> fmap fdPayload audioFile
                       <*> fmap fdFileName audioFile
                       <*> duration

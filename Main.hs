@@ -20,14 +20,14 @@ import           Control.Monad.Trans.Reader    (Reader, ReaderT, ask,
 import           Control.Monad.Trans.Resource  (runResourceT)
 import qualified Data.ByteString.Lazy          as Lazy
 import           Data.Foldable                 (foldl')
-import           Data.List                     (sortBy)
+import           Data.List                     (sortOn, sortBy)
 import           Data.Ord                      (Down (..), comparing)
 import           Data.Pool                     (Pool)
 import           Data.Text                     (Text, replace, toUpper)
 import qualified Data.Text                     as Text
 import           Data.Text.IO                  (readFile)
 import           Data.Time.Clock               (getCurrentTime)
-import           Data.Time.Format              (defaultTimeLocale, formatTime,
+import           Data.Time.Format              (parseTimeM, defaultTimeLocale, formatTime,
                                                 rfc822DateFormat)
 import           Data.Time.LocalTime           (getZonedTime)
 import           Database.Persist              (insert)
@@ -63,7 +63,7 @@ import           Hosting                       (mediaDir, mediaLink, mkFileUrl,
 import           Html                          (uploadForm, homepage)
 import qualified Model
 
-import           Prelude                       (FilePath, IO, Int, Maybe (..),
+import           Prelude                       (Bool (..), FilePath, IO, Int, Maybe (..),
                                                 String, div, flip, fromIntegral,
                                                 map, mod, putStrLn, return,
                                                 show, ($), (*), (.), (/), (/=),
@@ -86,7 +86,10 @@ handleHomepage = do
   pure $ renderHtml $ homepage episodes
 
 handleUploadForm :: Handler Lazy.ByteString
-handleUploadForm = pure $ renderHtml uploadForm
+handleUploadForm = do
+  now <- liftIO getCurrentTime
+  let today = Text.pack $ formatTime defaultTimeLocale "%F" now
+  pure $ renderHtml $ uploadForm today
 
 formatDuration :: Int -> Text
 formatDuration d =
@@ -98,12 +101,16 @@ formatDuration d =
 handleUpload :: EpisodeUpload -> Handler String
 handleUpload EpisodeUpload{..} = do
   now <- liftIO getCurrentTime
+  -- TODO: these check don't have any effect
   when (uploadAudioFilename == "\"\"") $
     throwError $ err400 { errBody = "audio file field mandatory" }
   when (uploadTitle == "") $
     throwError $ err400 { errBody = "title field is mandatory" }
-  let date = Text.pack $ formatTime defaultTimeLocale "%F" now
-      slug = date <> "_" <> convertToFilename (toUpper uploadTitle)
+  episodePubdate <- case parseTimeM False defaultTimeLocale "%F" (Text.unpack uploadDate) of
+    Just d -> pure d
+    Nothing -> throwError $ err400 { errBody = "could not parse date" }
+  let day = Text.pack $ formatTime defaultTimeLocale "%F" episodePubdate
+      slug = day <> "_" <> convertToFilename (toUpper uploadTitle)
       episodeFtExtension = Text.pack $ takeExtensions $ Text.unpack uploadAudioFilename
       audioFile = mediaDir </> Text.unpack slug <> Text.unpack episodeFtExtension
       -- fill Model.episode
@@ -187,7 +194,7 @@ handleFeedXML = do
             authors = "Luke & Rubm" :: Text
             itunesOwnerNames = "Luke and Rubm" :: Text
             episodeData = getEpisodeFeedData <$>
-              sortBy (comparing $ Down . episodeCreated) episodeList
+              sortOn  (Down . episodeCreated) episodeList
             latestDate = case headMay episodeData of
               Just efd -> efdRFC822 efd
               Nothing  -> pubDate

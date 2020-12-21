@@ -12,6 +12,7 @@ module Model where
 
 import Data.Text
 import Data.Time (UTCTime)
+import Data.Time.Calendar (Day)
 
 import Database.Persist
 import Database.Persist.MySQL
@@ -27,5 +28,6 @@ Episode
   description      Text
   duration         Int           -- duration in seconds
   fileSize         Int           -- file size in bytes
+  pubdate          Day           -- day of recording
   created          UTCTime
 |]
