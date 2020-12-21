@@ -24,7 +24,7 @@ executable uploadmask
                      , Html
                      , Model
   -- other-extensions:
-  build-depends:       base >=4.12 && <4.13
+  build-depends:       base >=4.12 && <= 4.13
                      , blaze-markup
                      , blaze-html
                      , bytestring

@@ -3,3 +3,5 @@ dist-newstyle/
 podcast.db
 media/
 *.lock
+cabal.project.local
+cabal.project.local~

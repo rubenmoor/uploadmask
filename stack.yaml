@@ -1,8 +1,5 @@
 resolver: lts-14.27
 nix:
   enable: true
-  packages: [ zlib ]
-
 extra-deps:
-  - git: https://github.com/rubenmoor/gerippe.git
-    commit: 628a6bb4463fab680662aac157b34d295e331ef9
+  - ./../../gerippe

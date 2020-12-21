@@ -60,7 +60,7 @@ import           Database.Gerippe              (BaseBackend, Entity,
                                                 getAll, (%))
 import           Hosting                       (mediaDir, mediaLink, mkFileUrl,
                                                 podcastLink, protocol)
-import           Html                          (uploadForm)
+import           Html                          (uploadForm, homepage)
 import qualified Model
 
 import           Prelude                       (FilePath, IO, Int, Maybe (..),
@@ -78,9 +78,15 @@ app state = serve api $ hoistServer api (flip runReaderT state) $
        handleFeedXML
   :<|> handleUploadForm
   :<|> handleUpload
+  :<|> handleHomepage
+
+handleHomepage :: Handler Lazy.ByteString
+handleHomepage = do
+  episodes <- map entityVal <$> runDb getAll
+  pure $ renderHtml $ homepage episodes
 
 handleUploadForm :: Handler Lazy.ByteString
-handleUploadForm = return $ renderHtml uploadForm
+handleUploadForm = pure $ renderHtml uploadForm
 
 formatDuration :: Int -> Text
 formatDuration d =
@@ -94,6 +100,8 @@ handleUpload EpisodeUpload{..} = do
   now <- liftIO getCurrentTime
   when (uploadAudioFilename == "\"\"") $
     throwError $ err400 { errBody = "audio file field mandatory" }
+  when (uploadTitle == "") $
+    throwError $ err400 { errBody = "title field is mandatory" }
   let date = Text.pack $ formatTime defaultTimeLocale "%F" now
       slug = date <> "_" <> convertToFilename (toUpper uploadTitle)
       episodeFtExtension = Text.pack $ takeExtensions $ Text.unpack uploadAudioFilename

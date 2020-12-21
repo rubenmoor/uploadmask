@@ -53,6 +53,7 @@ instance FromMultipart Tmp EpisodeUpload where
 type API = "feed.xml" :> Get '[XML] Lazy.ByteString
       :<|> "upload"   :> Get '[HTML] Lazy.ByteString
       :<|> "upload"   :> MultipartForm Tmp EpisodeUpload :> Post '[PlainText] String
+      :<|> Get '[HTML] Lazy.ByteString
 
 data HTML
 

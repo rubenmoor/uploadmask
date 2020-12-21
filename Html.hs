@@ -5,6 +5,7 @@
 
 module Html
   ( uploadForm
+  , homepage
   ) where
 
 import           Control.Monad               (forM_)
