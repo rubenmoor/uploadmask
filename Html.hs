@@ -18,40 +18,10 @@ import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
 import qualified Text.Blaze.Html5.Attributes as A
 import           Text.RawString.QQ
 
-import Hosting (mkFileUrl)
+import Hosting (staticLink, protocol, mkFileUrl)
 import           Model                       (Episode (..))
 
-import           Prelude                     (($))
-
-styleUpload :: Html
-styleUpload = [r|
-body {
-  font-family: sans-serif;
-}
-
-div {
-  margin: 15px;
-}
-
-input#title {
-  width: 400px;
-}
-
-input#duration {
-  width: 400px;
-}
-
-textarea#description {
-  width: 400px;
-}
-
-div#submit {
-  text-align: right;
-}
-progress#progressBar {
-  width: 400px;
-}
-|]
+import           Prelude                     ((<>), ($))
 
 myScript :: Html
 myScript = [r|
@@ -103,6 +73,9 @@ myScript = [r|
   }
 |]
 
+staticFile :: Text -> Text
+staticFile filename = protocol <> staticLink <> "/" <> filename
+
 uploadForm :: Text -> Html
 uploadForm today =
   docTypeHtml $ do
@@ -110,7 +83,7 @@ uploadForm today =
       meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
       meta ! content "utf-8" ! httpEquiv "encoding"
       title "Upload new episode"
-      style styleUpload
+      link ! rel "stylesheet" ! href (textValue $ staticFile "styles.css")
       script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
       script myScript
     body $
@@ -146,20 +119,17 @@ uploadForm today =
           span ! id "errorMessage" ! A.style "color: red" $ ""
           button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
 
-styleHomepage :: Html
-styleHomepage = ""
-
 homepage :: [Episode] -> Html
 homepage episodes = docTypeHtml $ do
   head $ do
     meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
     meta ! content "utf-8" ! httpEquiv "encoding"
     title "Völlig irrelevant - Der Podcast"
-    style styleHomepage
-  body $ forM_ episodes $ \Episode{..} -> do
+    link ! rel "stylesheet" ! href (textValue $ staticFile "styles.css")
+  body $ forM_ episodes $ \Episode{..} ->
     div $ do
-      h1 $ text episodeTitle
       div $ string $ formatTime defaultTimeLocale "%F" episodePubdate
+      h3 $ text episodeTitle
       audio ! controls "controls" ! preload "none" $
-        source ! src (textValue $ mkFileUrl episodeFtExtension $ episodeSlug)
+        source ! src (textValue $ mkFileUrl episodeFtExtension episodeSlug)
       div $ text episodeDescription

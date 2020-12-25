@@ -1,0 +1,26 @@
+body {
+  font-family: sans-serif;
+}
+
+div {
+  margin: 15px;
+}
+
+input#title {
+  width: 400px;
+}
+
+input#duration {
+  width: 400px;
+}
+
+textarea#description {
+  width: 400px;
+}
+
+div#submit {
+  text-align: right;
+}
+progress#progressBar {
+  width: 400px;
+}

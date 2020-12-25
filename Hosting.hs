@@ -15,8 +15,11 @@ protocol = "https://"
 podcastLink :: Text
 podcastLink = "podcast.rubenmoor.net"
 
+staticLink :: Text
+staticLink = "podcast-static.rubenmoor.net"
+
 mediaLink :: Text
-mediaLink = "podcast-static.rubenmoor.net/media"
+mediaLink = staticLink <> "/media"
 
 -- https://dts.podtrac.com/redirect.m4a/podcast-static.rubenmoor.net/media/2020-11-15_BANANE.m4a
 mkFileUrl :: Text -> Text -> Text
