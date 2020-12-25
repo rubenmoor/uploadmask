@@ -7,7 +7,7 @@ module Hosting
 import Data.Text (Text)
 
 mediaDir :: FilePath
-mediaDir = "/root/media"
+mediaDir = "/root/static/media"
 
 protocol :: Text
 protocol = "https://"
@@ -16,9 +16,9 @@ podcastLink :: Text
 podcastLink = "podcast.rubenmoor.net"
 
 mediaLink :: Text
-mediaLink = "podcast-media.rubenmoor.net"
+mediaLink = "podcast-static.rubenmoor.net/media"
 
--- https://dts.podtrac.com/redirect.m4a/podcast-media.rubenmoor.net/2020-11-15_BANANE.m4a
+-- https://dts.podtrac.com/redirect.m4a/podcast-static.rubenmoor.net/media/2020-11-15_BANANE.m4a
 mkFileUrl :: Text -> Text -> Text
 mkFileUrl filetypeExtension slug =
      protocol
