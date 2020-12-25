@@ -63,7 +63,7 @@ import           Hosting                       (mediaDir, mediaLink, mkFileUrl,
 import           Html                          (uploadForm, homepage)
 import qualified Model
 
-import           Prelude                       (Bool (..), FilePath, IO, Int, Maybe (..),
+import           Prelude                       (maybe, Bool (..), FilePath, IO, Int, Maybe (..),
                                                 String, div, flip, fromIntegral,
                                                 map, mod, putStrLn, return,
                                                 show, ($), (*), (.), (/), (/=),
@@ -185,6 +185,7 @@ handleFeedXML = do
   let contents = renderMarkup (
         let title = "völlig irrelevant" :: Text
             img = "microphone.jpg" :: Text
+            imgUrl = protocol <> mediaLink <> "/" <> img
             description = "Wir reden hier über Themen" :: Text
             copyright = "Ruben Moor & Lucas Weiß" :: Text
             email = "ruben.moor@gmail.com (Ruben Moor)" :: Text
@@ -195,9 +196,7 @@ handleFeedXML = do
             itunesOwnerNames = "Luke and Rubm" :: Text
             episodeData = getEpisodeFeedData <$>
               sortOn  (Down . episodeCreated) episodeList
-            latestDate = case headMay episodeData of
-              Just efd -> efdRFC822 efd
-              Nothing  -> pubDate
+            latestDate = maybe pubDate efdRFC822 $ headMay episodeData
         in  $(compileHtmlFile "feed.xml.tpl"))
   return contents
 

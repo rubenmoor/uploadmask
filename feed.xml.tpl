@@ -21,7 +21,7 @@
         <pubDate>#{pubDate}</pubDate>
         <lastBuildDate>#{latestDate}</lastBuildDate>
         <image>
-            <url>#{mediaLink}/#{img}</url>
+            <url>#{imgUrl}</url>
             <title>#{title}</title>
             <link>#{protocol}#{podcastLink}</link>
         </image>
@@ -35,7 +35,7 @@
             <itunes:name><![CDATA[#{itunesOwnerNames}]]></itunes:name>
             <itunes:email>#{email}</itunes:email>
         </itunes:owner>
-        <itunes:image href="#{mediaLink}/#{img}" />
+        <itunes:image href="#{imgUrl}" />
         <itunes:category text="Technology" />
         <itunes:explicit>no</itunes:explicit>
         %{ forall efd <- episodeData }
