@@ -23,7 +23,8 @@ import           Prelude              (Either (..), FilePath, Int, Maybe (..),
                                        String, fmap, id, (.), (<$>), (<*>))
 
 data EpisodeUpload = EpisodeUpload
-    { uploadTitle             :: Text
+    { uploadCustomIndex       :: Text
+    , uploadTitle             :: Text
     , uploadDate              :: Text
     , uploadAudioFile         :: FilePath
     , uploadAudioFilename     :: Text
@@ -42,7 +43,8 @@ instance FromMultipart Tmp EpisodeUpload where
         duration = case decimal <$> lookupInput "duration" formdata of
           Just (Right (d, _)) -> Just d
           _                   -> Nothing
-    in  EpisodeUpload <$> lookupInput "title" formdata
+    in  EpisodeUpload <$> lookupInput "index" formdata
+                      <*> lookupInput "title" formdata
                       <*> lookupInput "date" formdata
                       <*> fmap fdPayload audioFile
                       <*> fmap fdFileName audioFile
@@ -56,6 +58,7 @@ type API = "feed.xml" :> Get '[XML] Lazy.ByteString
       :<|> "upload"   :> Get '[HTML] Lazy.ByteString
       :<|> "upload"   :> MultipartForm Tmp EpisodeUpload :> Post '[PlainText] String
       :<|> Get '[HTML] Lazy.ByteString
+      :<|> Capture "episodeSlug" Text :> QueryParam "t" Text :> Get '[HTML] Lazy.ByteString
 
 data HTML
 

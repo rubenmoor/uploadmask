@@ -1,9 +1,211 @@
 body {
-  font-family: sans-serif;
+  font-family: 'Abel', sans-serif;
+  background-color: lightgray;
+  margin: 0;
 }
 
-div {
-  margin: 15px;
+/* general */
+
+a.download {
+  text-decoration:none;
+  color: #2424AA;
+}
+
+a.download:hover {
+  text-decoration: underline;
+}
+
+/* single episode */
+
+h2 {
+  margin: 0;
+}
+
+a#toHome {
+  font-size: 12pt;
+  color: darkgray;
+  text-decoration: none;
+}
+
+a#toHome:hover {
+  color: black;
+}
+
+div#header {
+  background-color: white;
+  height: 92px;
+  padding-top: 24px;
+  min-width: 1024px;
+}
+
+div#title {
+  background-color: white;
+  width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+span#episodeDate {
+  width: 100px;
+  float: right;
+  color: #081430;
+  text-align: right;
+  position: relative;
+  top: -20px;
+}
+
+div#gradient {
+  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  height: 16px;
+  margin-top: 8px;
+}
+
+div#body {
+  width: 1024px;
+  display: table;
+  margin-left: auto;
+  margin-right: auto;
+  border-spacing: 8px;
+}
+
+div#contents {
+  display: table-row;
+}
+
+div#left {
+  display: table-cell;
+  background-color: white;
+  border-radius: 20px;
+  width: 640px;
+  height: 480px;
+  margin-right: 8px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+span#noVideoUrl {
+  color: darkgray;
+}
+
+div#right {
+  display: table-cell;
+}
+
+div#audio {
+  background-color: white;
+  height: 80px;
+  padding: 12px;
+  border-radius: 20px;
+}
+
+audio#single {
+  width: 340px;
+  border-radius: 20px;
+  height: 40px;
+}
+
+div#description {
+  background-color: white;
+  border-radius: 20px;
+  height: 344px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+div#comments {
+  background-color: white;
+  width:992px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 20px;
+  padding: 12px;
+}
+
+
+/* episode list */
+
+audio.list {
+  width: 616px;
+  border-radius: 20px;
+  height: 40px;
+  margin-top: 12px;
+}
+
+div#content {
+  width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h3 {
+  position: relative;
+  top: 10px;
+  height: 20px;
+  cursor: pointer;
+}
+
+h3 a {
+  color: black;
+  text-decoration: none;
+}
+
+span.pubdate {
+  position: relative;
+  top: -26px;
+  width: 100px;
+  float: right;
+  color: #1f1430;
+  text-align: right;
+}
+
+div.episode {
+  background-color: white;
+  border-radius: 10px;
+  padding: 0px 12px 12px 12px;
+  margin-top: -10px;
+}
+
+div.belowTitle {
+  position: relative;
+  width: 640px;
+  height: 16px;
+  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  left: -12px;
+}
+
+div.duration {
+  font-size: 10pt;
+  color: #1f1430;
+  margin-left: 12px;
+  margin-top: 8px;
+}
+
+div.belowDescription {
+  position: relative;
+  width: 640px;
+  height: 1px;
+  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  left: -12px;
+}
+
+div.description {
+  margin: 12px;
+}
+
+div.footer {
+  height: 22px;
+}
+
+span.download {
+  margin-top: 6px;
+  float: right;
+  font-size: 10pt;
+}
+
+/* upload form */
+
+form div {
+  margin-top: 15px;
 }
 
 input#title {

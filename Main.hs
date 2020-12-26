@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
@@ -11,36 +12,40 @@
 
 module Main where
 
+import           Control.Applicative           ((*>))
 import           Control.Monad                 (unless, when)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Logger          (NoLoggingT (..), runNoLoggingT)
 import           Control.Monad.Reader          (MonadReader)
-import           Control.Monad.Trans.Reader    (Reader, ReaderT, ask,
+import           Control.Monad.Trans.Reader    (Reader, ReaderT, asks,
                                                 runReaderT)
 import           Control.Monad.Trans.Resource  (runResourceT)
+import           Data.ByteString               (ByteString)
 import qualified Data.ByteString.Lazy          as Lazy
 import           Data.Foldable                 (foldl')
-import           Data.List                     (sortOn, sortBy)
+import           Data.List                     (sortBy, sortOn, length)
 import           Data.Ord                      (Down (..), comparing)
 import           Data.Pool                     (Pool)
-import           Data.Text                     (Text, replace, toUpper)
+import           Data.Text                     (Text, replace, toUpper, words)
 import qualified Data.Text                     as Text
+import qualified Data.Text.Encoding            as Text
 import           Data.Text.IO                  (readFile)
 import           Data.Time.Clock               (getCurrentTime)
-import           Data.Time.Format              (parseTimeM, defaultTimeLocale, formatTime,
-                                                rfc822DateFormat)
+import           Data.Time.Format              (defaultTimeLocale, formatTime,
+                                                parseTimeM, rfc822DateFormat)
 import           Data.Time.LocalTime           (getZonedTime)
 import           Database.Persist              (insert)
-import           Database.Persist.MySQL        (SqlBackend, SqlPersistT,
-                                                mkMySQLConnectInfo,
-                                                runMigration, runSqlPool,
-                                                withMySQLPool)
+import           Database.Persist.MySQL        (MySQLConnectInfo, SqlBackend,
+                                                SqlPersistT, mkMySQLConnectInfo,
+                                                runSqlPool, withMySQLPool)
+import qualified Database.Persist.MySQL        as MySQL
 import           Model                         (Episode (..), migrateAll)
+import           Network.Socket                (HostName)
 import           Network.Wai.Handler.Warp      (defaultSettings, run)
 import           Options.Applicative
 import           Safe                          (headMay)
 import           Servant                       ((:<|>) (..), Application,
-                                                err400, throwError)
+                                                err400, err404, throwError)
 import qualified Servant
 import           Servant.Multipart             (MultipartData, Tmp)
 import           Servant.Server                (ServerError (..), hoistServer,
@@ -51,55 +56,66 @@ import           System.Posix                  (fileSize, getFileStatus)
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import           Text.Blaze.Renderer.Utf8      (renderMarkup)
 import           Text.Heterocephalus
-import           Text.Printf                   (printf)
+import           TextShow                      (showt)
 
 import           Api                           (EpisodeUpload (..), api)
-import           Database.Gerippe              (BaseBackend, Entity,
+import           Database.Gerippe              (BaseBackend, Entity (..), getBy,
                                                 IsPersistBackend,
                                                 PersistEntityBackend, entityVal,
-                                                getAll, (%))
-import           Hosting                       (mediaDir, mediaLink, mkFileUrl,
+                                                getAll, getAllValues, getWhere,
+                                                keyToId, (%))
+import           Hosting                       (mediaLink, mkFileUrl,
                                                 podcastLink, protocol)
-import           Html                          (uploadForm, homepage)
+import qualified Html
 import qualified Model
 
-import           Prelude                       (maybe, Bool (..), FilePath, IO, Int, Maybe (..),
-                                                String, div, flip, fromIntegral,
-                                                map, mod, putStrLn, return,
-                                                show, ($), (*), (.), (/), (/=),
-                                                (<$>), (<>), (==))
+import           Prelude                       (Bool (..), FilePath, IO, Int,
+                                                Maybe (..), String, div, flip,
+                                                fromIntegral, map, maybe, mod,
+                                                putStrLn, return, show, ($),
+                                                (*), (-), (.), (/), (/=), (<$>),
+                                                (<>), (==), (>>=))
 
-type AppState = Pool SqlBackend
+data AppConfig = AppConfig
+    { cfgPool      :: Pool SqlBackend
+    , cfgStaticLoc :: Text
+    , cfgMediaDir  :: FilePath
+    }
 
-type Handler = ReaderT AppState Servant.Handler
+type Handler = ReaderT AppConfig Servant.Handler
 
-app :: AppState -> Application
+app :: AppConfig -> Application
 app state = serve api $ hoistServer api (flip runReaderT state) $
        handleFeedXML
   :<|> handleUploadForm
   :<|> handleUpload
   :<|> handleHomepage
+  :<|> handleEpisode
+
+handleEpisode :: Text -> Maybe Text -> Handler Lazy.ByteString
+handleEpisode slug timeStamp = do
+  staticLoc <- asks cfgStaticLoc
+  runDb (getBy $ Model.UniqueSlug slug) >>= \case
+    Just (Entity _ episode) -> pure $ renderHtml $ Html.episode staticLoc episode
+    Nothing                 -> throwError $ err404 { errBody = "episode not found" }
 
 handleHomepage :: Handler Lazy.ByteString
 handleHomepage = do
-  episodes <- map entityVal <$> runDb getAll
-  pure $ renderHtml $ homepage episodes
+  episodes <- runDb getAllValues
+  staticLoc <- asks cfgStaticLoc
+  pure $ renderHtml $ Html.homepage staticLoc episodes
 
 handleUploadForm :: Handler Lazy.ByteString
 handleUploadForm = do
+  staticLoc <- asks cfgStaticLoc
   now <- liftIO getCurrentTime
   let today = Text.pack $ formatTime defaultTimeLocale "%F" now
-  pure $ renderHtml $ uploadForm today
-
-formatDuration :: Int -> Text
-formatDuration d =
-  let seconds = d `mod` 60
-      minutes = (d `div` 60) `mod` 60
-      hours = d `div` (60 * 60)
-  in  Text.pack $ printf "%02d:%02d:%02d" hours minutes seconds
+  currentIndex <- showt . length <$> (runDb getAll :: Handler [Entity Model.Episode])
+  pure $ renderHtml $ Html.uploadForm staticLoc today currentIndex
 
 handleUpload :: EpisodeUpload -> Handler String
 handleUpload EpisodeUpload{..} = do
+  mediaDir <- asks cfgMediaDir
   now <- liftIO getCurrentTime
   -- TODO: these check don't have any effect
   when (uploadAudioFilename == "\"\"") $
@@ -107,24 +123,27 @@ handleUpload EpisodeUpload{..} = do
   when (uploadTitle == "") $
     throwError $ err400 { errBody = "title field is mandatory" }
   episodePubdate <- case parseTimeM False defaultTimeLocale "%F" (Text.unpack uploadDate) of
-    Just d -> pure d
+    Just d  -> pure d
     Nothing -> throwError $ err400 { errBody = "could not parse date" }
   let day = Text.pack $ formatTime defaultTimeLocale "%F" episodePubdate
       slug = day <> "_" <> convertToFilename (toUpper uploadTitle)
       episodeFtExtension = Text.pack $ takeExtensions $ Text.unpack uploadAudioFilename
       audioFile = mediaDir </> Text.unpack slug <> Text.unpack episodeFtExtension
       -- fill Model.episode
+      episodeCustomIndex = uploadCustomIndex
       episodeTitle = uploadTitle
       episodeThumbnailFile =
         if uploadThumbnailFilename /= "\"\""
         then mediaDir </> Text.unpack (slug
                <> Text.pack (takeExtensions $ Text.unpack uploadThumbnailFilename))
         else ""
-      episodeDescription = uploadDescription
+      episodeDescriptionShort = uploadDescription
+      episodeDescriptionLong = uploadDescription
       episodeAudioContentType = uploadAudioContentType
       episodeSlug = slug
       episodeDuration = uploadDuration
       episodeCreated = now
+      episodeVideoUrl = ""
   episodeFileSize <- liftIO $ fromIntegral . fileSize <$> getFileStatus uploadAudioFile
   let episode = Model.Episode{..}
   liftIO $ do
@@ -152,83 +171,130 @@ data EpisodeFeedData = EpisodeFeedData
     , efdFileSize          :: Int
     }
 
-getEpisodeFeedData :: Model.Episode -> EpisodeFeedData
-getEpisodeFeedData Model.Episode{..} =
+getEpisodeFeedData :: Text -> Model.Episode -> EpisodeFeedData
+getEpisodeFeedData staticLoc Model.Episode{..} =
   let efdRFC822 = replace "UTC" "UT" $
         Text.pack $ formatTime defaultTimeLocale rfc822DateFormat episodeCreated
       efdSlug = episodeSlug
       efdFtExtension = episodeFtExtension
-      efdAudioFileUrl = mkFileUrl efdFtExtension efdSlug
+      efdAudioFileUrl = mkFileUrl staticLoc efdFtExtension efdSlug
       efdPageUrl = protocol <> podcastLink <> "/" <> efdSlug
       efdTitle = episodeTitle
-      efdThumbnailFile = protocol <> mediaLink <> "/" <>
-        if episodeThumbnailFile == ""
-        then "microphone.jpg"
+      efdThumbnailFile = mediaLink staticLoc <> "/" <>
+        if episodeThumbnailFile == "" then "microphone.jpg"
         else Text.pack episodeThumbnailFile
-      efdDescription = episodeDescription
+      efdDescription = episodeDescriptionShort
       efdAudioContentType = episodeAudioContentType
       efdDurationSeconds = episodeDuration
-      efdDurationFormatted = formatDuration episodeDuration
+      efdDurationFormatted = Html.formatDuration episodeDuration
       efdFileSize = episodeFileSize
   in  EpisodeFeedData{..}
 
-runDb ::
-   (MonadIO m, IsPersistBackend backend, BaseBackend backend ~ SqlBackend) =>
-  ReaderT backend IO b -> ReaderT (Pool backend) m b
+runDb :: MonadIO m => ReaderT SqlBackend IO a -> ReaderT AppConfig m a
 runDb action = do
-  pool <- ask
+  pool <- asks cfgPool
   liftIO $ runSqlPool action pool
 
 handleFeedXML :: Handler Lazy.ByteString
 handleFeedXML = do
-  episodeList <- map entityVal <$> runDb getAll
+  staticLoc <- asks cfgStaticLoc
+  episodeList <- runDb getAllValues
   let contents = renderMarkup (
         let title = "völlig irrelevant" :: Text
             img = "microphone.jpg" :: Text
-            imgUrl = protocol <> mediaLink <> "/" <> img
+            imgUrl = mediaLink staticLoc <> "/" <> img
             description = "Wir reden hier über Themen" :: Text
-            copyright = "Ruben Moor & Lucas Weiß" :: Text
-            email = "ruben.moor@gmail.com (Ruben Moor)" :: Text
+            copyright = "Rubm & Luke" :: Text
+            email = "luke.rubm@gmail.com (Luke & Rubm)" :: Text
             pubDate = "Thu, 17 Dec 2020 02:00:00 GMT" :: Text
             itunesSubtitle = "Wir reden hier über Themen (Subtitle)" :: Text
             itunesSummary = "Wir reden hier über Themen (Summary)" :: Text
             authors = "Luke & Rubm" :: Text
             itunesOwnerNames = "Luke and Rubm" :: Text
-            episodeData = getEpisodeFeedData <$>
+            episodeData = getEpisodeFeedData staticLoc <$>
               sortOn  (Down . episodeCreated) episodeList
             latestDate = maybe pubDate efdRFC822 $ headMay episodeData
         in  $(compileHtmlFile "feed.xml.tpl"))
   return contents
 
 data Options = Options
-    { optPort :: Int
+    { optPort      :: Int
+    , optStaticLoc :: Text
+    , optMediaDir  :: FilePath
+    , optHost      :: HostName
+    , optUser      :: ByteString
+    , optPwd       :: ByteString
+    , optDbName    :: ByteString
     }
 
-optParse :: Parser Options
-optParse = Options <$> option auto (
-     long "port"
-  <> short 'p'
-  <> metavar "PORT"
-  <> value 3000
-  <> help "serve at specified port"
-  <> showDefault
-  )
+parseMyOptions :: Parser Options
+parseMyOptions = Options
+  <$> option auto (
+           long "port"
+        <> short 'p'
+        <> metavar "PORT"
+        <> value 3000
+        <> help "serve at specified port"
+        <> showDefault
+        )
+  <*> strOption (
+            long "static-location"
+         <> metavar "STATICLOC"
+         <> value "http://localhost:3001/static"
+         <> help "location of static files"
+         <> showDefault
+         )
+  <*> strOption (
+            long "media-directory"
+        <> metavar "MEDIADIR"
+        <> value "media"
+        <> help "audio files will be copied here"
+        <> showDefault
+        )
+  <*> strOption (
+           long "mysql-host"
+        <> metavar "HOST"
+        <> value "localhost"
+        <> help "mysql host"
+        <> showDefault
+        )
+  <*> strOption (
+           long "mysql-user"
+        <> metavar "USER"
+        <> value "podcast"
+        <> help "mysql user"
+        <> showDefault
+        )
+  <*> strOption (
+           long "mysql-password"
+        <> metavar "PASSWORD"
+        <> value "foobar"
+        <> help "mysql password for given user"
+        )
+  <*> strOption (
+           long "mysql-database"
+        <> metavar "DATABASE_NAME"
+        <> value "podcast"
+        <> help "mysql database name"
+        <> showDefault
+        )
 
 main :: IO ()
 main = do
-  Options{..} <- execParser $ info (optParse <**> helper) (
+  Options{..} <- execParser $ info (parseMyOptions <**> helper) (
        fullDesc
     <> progDesc "Welcome to the homepage server of the podcast project"
     )
   putStrLn $ "Serving at port " <> show optPort
-  let connectInfo = mkMySQLConnectInfo
-        "mysql"
-        "podcast"
-        "HwEGjT3hQhs2"
-        "podcast"
-  runNoLoggingT $ withMySQLPool connectInfo 10 $ \pool -> do
-    runResourceT $ flip runSqlPool pool $ runMigration migrateAll
-    NoLoggingT $ run optPort $ app pool
+  let connectInfo = mkMySQLConnectInfo optHost optUser optPwd optDbName
+  runNoLoggingT $  withMySQLPool connectInfo 10 $ \pool -> do
+    runResourceT $ flip runSqlPool pool $ MySQL.runMigration migrateAll
+    let config = AppConfig
+          { cfgPool = pool
+          , cfgMediaDir = optMediaDir
+          , cfgStaticLoc = optStaticLoc
+          }
+    NoLoggingT $ run optPort $ app config
 
 convertToFilename :: Text -> Text
 convertToFilename str =

@@ -22,12 +22,16 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Episode
   title            Text
   slug             Text
+  UniqueSlug slug
+  customIndex      Text
   ftExtension      Text
   audioContentType Text
   thumbnailFile    FilePath
-  description      Text
+  descriptionShort Text
+  descriptionLong  Text
   duration         Int           -- duration in seconds
   fileSize         Int           -- file size in bytes
   pubdate          Day           -- day of recording
   created          UTCTime
+  videoUrl         Text
 |]

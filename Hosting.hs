@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Hosting
   ( module Hosting
   ) where
 
-import Data.Text (Text)
+import Data.Text (Text, breakOn, drop)
 
-mediaDir :: FilePath
-mediaDir = "/root/static/media"
+import Prelude (($), snd, (<>))
 
 protocol :: Text
 protocol = "https://"
@@ -15,17 +15,18 @@ protocol = "https://"
 podcastLink :: Text
 podcastLink = "podcast.rubenmoor.net"
 
-staticLink :: Text
-staticLink = "podcast-static.rubenmoor.net"
-
-mediaLink :: Text
-mediaLink = staticLink <> "/media"
+mediaLink :: Text -> Text
+mediaLink staticLoc = staticLoc <> "/media"
 
 -- https://dts.podtrac.com/redirect.m4a/podcast-static.rubenmoor.net/media/2020-11-15_BANANE.m4a
-mkFileUrl :: Text -> Text -> Text
-mkFileUrl filetypeExtension slug =
-     protocol
-  <> "dts.podtrac.com/redirect"
-  <> filetypeExtension
-  <> "/" <> mediaLink <> "/"
-  <> slug <> filetypeExtension
+mkFileUrl :: Text -> Text -> Text -> Text
+mkFileUrl staticLoc filetypeExtension slug =
+  let mediaLink' = drop 3 $ snd $ breakOn "://" $ mediaLink staticLoc
+  in     protocol
+      <> "dts.podtrac.com/redirect"
+      <> filetypeExtension
+      <> "/" <> mediaLink' <> "/"
+      <> slug <> filetypeExtension
+
+schnackUrl :: Text
+schnackUrl = "https://podcast-schnack.rubenmoor.net/embed.js"

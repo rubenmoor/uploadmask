@@ -35,6 +35,7 @@ executable uploadmask
                      , http-media
                      , monad-logger
                      , mtl
+                     , network
                      , optparse-applicative
                      , persistent
                      , persistent-template
@@ -47,6 +48,7 @@ executable uploadmask
                      , servant-multipart
                      , servant-server
                      , text
+                     , text-show
                      , time
                      , timerep
                      , transformers
