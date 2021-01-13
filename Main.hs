@@ -23,7 +23,7 @@ import           Control.Monad.Trans.Resource  (runResourceT)
 import           Data.ByteString               (ByteString)
 import qualified Data.ByteString.Lazy          as Lazy
 import           Data.Foldable                 (foldl')
-import           Data.List                     (sortBy, sortOn, length)
+import           Data.List                     (length, sortBy, sortOn)
 import           Data.Ord                      (Down (..), comparing)
 import           Data.Pool                     (Pool)
 import           Data.Text                     (Text, replace, toUpper, words)
@@ -59,13 +59,17 @@ import           Text.Heterocephalus
 import           TextShow                      (showt)
 
 import           Api                           (EpisodeUpload (..), api)
-import           Database.Gerippe              (BaseBackend, Entity (..), getBy,
+import qualified Api                           (Order (..), SortBy (..))
+import           Database.Gerippe              (BaseBackend, Entity (..),
                                                 IsPersistBackend,
-                                                PersistEntityBackend, entityVal,
-                                                getAll, getAllValues, getWhere,
-                                                keyToId, (%))
+                                                PersistEntityBackend, asc, desc,
+                                                entityVal, from, getAll,
+                                                getAllValues, getBy, getWhere,
+                                                keyToId, orderBy, select, (%),
+                                                (^.))
 import           Hosting                       (mediaLink, mkFileUrl,
                                                 podcastLink, protocol)
+import           Html                          (Order (..), SortBy (..))
 import qualified Html
 import qualified Model
 
@@ -99,11 +103,26 @@ handleEpisode slug timeStamp = do
     Just (Entity _ episode) -> pure $ renderHtml $ Html.episode staticLoc episode
     Nothing                 -> throwError $ err404 { errBody = "episode not found" }
 
-handleHomepage :: Handler Lazy.ByteString
-handleHomepage = do
-  episodes <- runDb getAllValues
+handleHomepage :: Maybe Api.SortBy -> Maybe Api.Order -> Handler Lazy.ByteString
+handleHomepage mSortBy mOrder = do
+  let sortBy = case mSortBy of
+        Just Api.SortByDate -> case mOrder of
+          Just Api.OrderDescending -> SortByDate OrderDescending
+          Just Api.OrderAscending  -> SortByDate OrderAscending
+          Nothing                  -> SortByDate OrderAscending
+        Nothing -> SortByDate OrderAscending
   staticLoc <- asks cfgStaticLoc
-  pure $ renderHtml $ Html.homepage staticLoc episodes
+  episodes <- case sortBy of
+    SortByDate order -> case order of
+      OrderDescending ->
+        runDb $ select $ from $ \e -> do
+          orderBy [ desc (e ^. Model.EpisodePubdate )]
+          pure e
+      OrderAscending ->
+        runDb $ select $ from $ \e -> do
+          orderBy [ asc (e ^. Model.EpisodePubdate )]
+          pure e
+  pure $ renderHtml $ Html.homepage staticLoc (map entityVal episodes) sortBy
 
 handleUploadForm :: Handler Lazy.ByteString
 handleUploadForm = do

@@ -7,6 +7,8 @@
 module Api
   ( api
   , EpisodeUpload (..)
+  , Order (..)
+  , SortBy (..)
   ) where
 
 import qualified Data.ByteString.Lazy as Lazy
@@ -19,7 +21,7 @@ import           Servant.Multipart
 import           Servant.Server
 import           Text.Blaze.Html      (Html)
 
-import           Prelude              (Either (..), FilePath, Int, Maybe (..),
+import           Prelude              ((<>), ($), Either (..), FilePath, Int, Maybe (..),
                                        String, fmap, id, (.), (<$>), (<*>))
 
 data EpisodeUpload = EpisodeUpload
@@ -57,7 +59,7 @@ instance FromMultipart Tmp EpisodeUpload where
 type API = "feed.xml" :> Get '[XML] Lazy.ByteString
       :<|> "upload"   :> Get '[HTML] Lazy.ByteString
       :<|> "upload"   :> MultipartForm Tmp EpisodeUpload :> Post '[PlainText] String
-      :<|> Get '[HTML] Lazy.ByteString
+      :<|> QueryParam "sortby" SortBy :> QueryParam "order" Order :> Get '[HTML] Lazy.ByteString
       :<|> Capture "episodeSlug" Text :> QueryParam "t" Text :> Get '[HTML] Lazy.ByteString
 
 data HTML
@@ -78,3 +80,16 @@ instance MimeRender XML Lazy.ByteString where
 
 api :: Proxy API
 api = Proxy
+
+data SortBy = SortByDate
+
+instance FromHttpApiData SortBy where
+  parseQueryParam "date" = Right SortByDate
+  parseQueryParam str = Left $ "unknown value for sortby: " <> str
+
+data Order = OrderDescending | OrderAscending
+
+instance FromHttpApiData Order where
+  parseQueryParam "desc" = Right OrderDescending
+  parseQueryParam "asc" = Right OrderAscending
+  parseQueryParam str = Left $ "unknown value for order: " <> str

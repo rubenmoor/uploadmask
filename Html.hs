@@ -8,6 +8,8 @@ module Html
   , homepage
   , episode
   , formatDuration
+  , SortBy (..)
+  , Order (..)
   ) where
 
 import           Text.Printf                   (printf)
@@ -36,6 +38,9 @@ import           Prelude                     ((*), mod, Int, ($), (<>), (-))
 -- -[ ] prerequisite: page per episode
 -- -[ ] embed video
 -- -[ ] extend basic styling to be presentable
+
+data Order = OrderDescending | OrderAscending
+data SortBy = SortByDate Order
 
 formatDuration :: Int -> Text
 formatDuration d =
@@ -146,8 +151,8 @@ uploadForm staticLoc today currentIndex =
           span ! id "errorMessage" ! A.style "color: red" $ ""
           button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
 
-homepage :: Text -> [Episode] -> Html
-homepage staticLoc episodes = docTypeHtml $ do
+homepage :: Text -> [Episode] -> SortBy -> Html
+homepage staticLoc episodes sortBy = docTypeHtml $ do
   head $ do
     meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
     meta ! content "utf-8" ! httpEquiv "encoding"
@@ -155,8 +160,28 @@ homepage staticLoc episodes = docTypeHtml $ do
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
     link ! rel "preconnect" ! href "https://fonts.gstatic.com"
     link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
-  body $
-    div ! id "content" $
+  body $ do
+    div ! id "header" $ do
+      div ! id "title" $ do
+        a ! A.style "visibility:hidden" ! id "toHome" ! href "/" ! A.title "Zurück zur Liste aller veröffentlichten Folgen" $
+          "‹ alle Folgen"
+        h2 $ text "Alle Folgen"
+        div ! id "serendipityworks" $ text "serendipity works"
+      div ! id "gradient" $ ""
+    div ! id "content" $ do
+      div ! id "searchparameters" $
+        case sortBy of
+          SortByDate order -> case order of
+            OrderAscending -> do
+              a ! href (textValue "/?sortby=date&order=desc") ! A.title "Nach absteigendem Datum sortieren" $
+                text "Neueste zuerst"
+              " | "
+              strong "Älteste zuerst"
+            OrderDescending -> do
+              strong "Neueste zuerst"
+              " | "
+              a ! href (textValue "/?sortby=date&order=asc") ! A.title "Nach aufsteigendem Datum sortieren" $
+                text "Älteste zuerst"
       forM_ episodes $ \Episode{..} ->
         div ! class_ "episode" $ do
           h3 $ a ! href (textValue $ "/" <> episodeSlug) ! A.title "episode details" $
@@ -166,6 +191,7 @@ homepage staticLoc episodes = docTypeHtml $ do
           audio ! class_ "list" ! controls "controls" ! preload "none" $
             source ! src (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
           div ! class_ "duration" $ text $ "Duration: " <> formatDuration episodeDuration
+          br ! A.style "clear:both"
           div ! class_ "description" $ text episodeDescriptionLong
           div ! class_ "belowDescription" $ ""
           div ! class_ "footer" $
@@ -186,6 +212,41 @@ episode staticLoc Episode{..} = docTypeHtml $ do
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
     link ! rel "preconnect" ! href "https://fonts.gstatic.com"
     link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
+
+    -- Font Awesome 5.13 free content -->
+    link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/FontAwesome/css/all.min.css")
+
+  body $ do
+    div ! id "header" $ do
+      div ! id "title" $ do
+        a ! id "toHome" ! href "/" ! A.title "Zurück zur Liste aller veröffentlichten Folgen" $
+          "‹ alle Folgen"
+        h2 $ text $ "#" <> episodeCustomIndex <> " " <> toLower episodeTitle
+        span ! id "episodeDate" $ string $ formatTime defaultTimeLocale "%b %d, '%y" episodePubdate
+        div ! id "serendipityworks" $ text "serendipity works"
+      div ! id "gradient" $ ""
+    div ! id "body" $
+      div ! id "contents" $ do
+        div ! id "left" $
+          if null episodeVideoUrl
+          then span ! id "noVideoUrl" $ "No associated video found"
+          else "embedded video goes here"
+        div ! id "right" $ do
+          div ! id "audio" $ do
+            audio ! id "single" ! controls "controls" ! preload "none" $
+              source ! src (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
+            div ! class_ "duration" $ text $ "Duration: " <> formatDuration episodeDuration
+            span ! class_ "download" $ do
+              "("
+              a ! href (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
+                ! A.title (textValue episodeFtExtension)
+                ! class_ "download"
+                $ "download"
+              ")"
+          div ! id "description" $ text episodeDescriptionLong
+    div ! class_ "comments"
+        ! id (textValue $ "comments-div-" <> episodeSlug)
+        $ ""
     script
       ! type_ "text/javascript"
       ! src (textValue schnackUrl)
@@ -206,32 +267,3 @@ episode staticLoc Episode{..} = docTypeHtml $ do
       ! dataAttribute "schnack-partial-admin-approval" "Waiting for approval"
       ! dataAttribute "schnack-partial-waiting-for-approval" "Dein Kommentar wird in Kürze freigegeben."
       $ ""
-  body $ do
-    div ! id "header" $ do
-      div ! id "title" $ do
-        a ! id "toHome" ! href "/" ! A.title "back to list of all episodes" $
-          "‹ all episodes"
-        h2 $ text $ "#" <> episodeCustomIndex <> " " <> toLower episodeTitle
-        span ! id "episodeDate" $ string $ formatTime defaultTimeLocale "%F" episodePubdate
-      div ! id "gradient" $ ""
-    div ! id "body" $
-      div ! id "contents" $ do
-        div ! id "left" $
-          if null episodeVideoUrl
-          then span ! id "noVideoUrl" $ "No associated video found"
-          else "embedded video goes here"
-        div ! id "right" $ do
-          div ! id "audio" $ do
-            audio ! id "single" ! controls "controls" ! preload "none" $
-              source ! src (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
-            span ! class_ "download" $ do
-              "("
-              a ! href (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
-                ! A.title (textValue episodeFtExtension)
-                ! class_ "download"
-                $ "download"
-              ")"
-          div ! id "description" $ text episodeDescriptionLong
-    div ! class_ "comments"
-        ! id (textValue $ "comments-div-" <> episodeSlug)
-        $ ""

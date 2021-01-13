@@ -13,7 +13,7 @@ protocol :: Text
 protocol = "https://"
 
 podcastLink :: Text
-podcastLink = "podcast.rubenmoor.net"
+podcastLink = "www.serendipity.works"
 
 mediaLink :: Text -> Text
 mediaLink staticLoc = staticLoc <> "/media"
@@ -29,4 +29,4 @@ mkFileUrl staticLoc filetypeExtension slug =
       <> slug <> filetypeExtension
 
 schnackUrl :: Text
-schnackUrl = "https://podcast-schnack.rubenmoor.net/embed.js"
+schnackUrl = "https://schnack.serendipity/embed.js"

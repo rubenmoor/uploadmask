@@ -1,3 +1,10 @@
+:root {
+  --link: #2424AA;
+  --anthrazit: #081430;
+  --neon-pink: #fe01b8;
+  --neon-yellow: #ffed03;
+}
+
 body {
   font-family: 'Abel', sans-serif;
   background-color: lightgray;
@@ -8,7 +15,7 @@ body {
 
 a.download {
   text-decoration:none;
-  color: #2424AA;
+  color: var(--link);
 }
 
 a.download:hover {
@@ -23,7 +30,7 @@ h2 {
 
 a#toHome {
   font-size: 12pt;
-  color: darkgray;
+  color: var(--anthrazit);
   text-decoration: none;
 }
 
@@ -36,6 +43,7 @@ div#header {
   height: 92px;
   padding-top: 24px;
   min-width: 1024px;
+  position: relative;
 }
 
 div#title {
@@ -43,19 +51,28 @@ div#title {
   width: 960px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+}
+
+div#serendipityworks {
+  position: absolute;
+  top: -25px;
+  left: 230px;
+  color: lightgrey;
+  font-size: 54pt;
 }
 
 span#episodeDate {
   width: 100px;
   float: right;
-  color: #081430;
+  color: var(--anthrazit);
   text-align: right;
   position: relative;
   top: -20px;
 }
 
 div#gradient {
-  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  background-image: linear-gradient(to right, var(--neon-pink), var(--neon-yellow));
   height: 16px;
   margin-top: 8px;
 }
@@ -84,7 +101,7 @@ div#left {
 }
 
 span#noVideoUrl {
-  color: darkgray;
+  color: gray;
 }
 
 div#right {
@@ -112,13 +129,131 @@ div#description {
   margin-top: 8px;
 }
 
-div#comments {
+div.comments {
   background-color: white;
   width:992px;
   margin-left: auto;
   margin-right: auto;
   border-radius: 20px;
   padding: 12px;
+}
+
+/* schnack comments */
+
+
+div.schnack-comment-inner {
+  background-color: gray;
+  padding: 10px 10px 0px 10px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+div.comments div.schnack-settings {
+    font-size: 8pt;
+    text-align: right;
+}
+
+div.schnack-form br {
+  display: none;
+}
+
+button.schnack-action {
+  border: none;
+  background-color: inherit;
+  display: inline-block;
+}
+
+button.schnack-action:hover {
+  text-decoration: underline;
+}
+
+button.schnack-send-comment {
+  padding: 8px;
+  border: 1px solid gray;
+  border-radius: 8px;
+}
+button.schnack-send-comment:hover {
+  background-color: gray;
+}
+
+button.schnack-preview {
+  border: none;
+  background-color: inherit;
+  color: ;
+}
+
+button.schnack-preview:hover {
+  text-decoration: underline;
+}
+
+button.schnack-cancel-reply {
+  border: none;
+  background-color: inherit;
+  color: var(--links);
+}
+
+button.schnack-cancel-reply:hover {
+  text-decoration: underline;
+}
+
+button.schnack-write {
+  border: none;
+  background-color: inherit;
+  color: var(--link);
+}
+
+button.schnack-write:hover {
+  text-decoration: underline;
+}
+
+button.schnack-reply {
+  border: none;
+  background-color: gray;
+  float: right;
+  color: var(--link);
+}
+button.schnack-reply:hover {
+  text-decoration: underline;
+}
+
+div.schnack-dateline {
+  font-weight: bold;
+  padding: 4px;
+  text-align: right;
+}
+
+span.schnack-date a {
+  font-size: 8pt;
+  text-decoration: none;
+  color: inherit;
+}
+span.schnack-date a:hover {
+  text-decoration: underline;
+}
+
+blockquote.schnack-body {
+  background-color: inherit;
+  padding: 5px;
+  border-style: none;
+  margin: -10px 0px 0px 0px;
+}
+
+textarea.schnack-body {
+  margin: 12px 0px;
+  padding: 8px;
+  width: 95%;
+  border: 1px solid gray;
+  border-radius: 8px;
+}
+
+button.schnack-signin {
+  background-color: inherit;
+  border-style: none;
+  padding: 2px;
+}
+
+button.schnack-signin:hover {
+  color: var(--link)
 }
 
 
@@ -129,6 +264,14 @@ audio.list {
   border-radius: 20px;
   height: 40px;
   margin-top: 12px;
+}
+
+div#searchparameters {
+  background-color: white;
+  border-radius: 10px;
+  padding: 12px 12px 12px 12px;
+  text-align: center;
+  margin-top: 10px;
 }
 
 div#content {
@@ -154,7 +297,7 @@ span.pubdate {
   top: -26px;
   width: 100px;
   float: right;
-  color: #1f1430;
+  color: var(--anthrazit);
   text-align: right;
 }
 
@@ -169,7 +312,7 @@ div.belowTitle {
   position: relative;
   width: 640px;
   height: 16px;
-  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  background-image: linear-gradient(to right, var(--neon-pink), var(--neon-yellow));
   left: -12px;
 }
 
@@ -178,13 +321,14 @@ div.duration {
   color: #1f1430;
   margin-left: 12px;
   margin-top: 8px;
+  float: left;
 }
 
 div.belowDescription {
   position: relative;
   width: 640px;
   height: 1px;
-  background-image: linear-gradient(to right, #fe01b8, #ffed03);
+  background-image: linear-gradient(to right, var(--neon-pink), var(--neon-yellow));
   left: -12px;
 }
 
