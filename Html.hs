@@ -14,7 +14,7 @@ module Html
 
 import           Text.Printf                   (printf)
 import           Control.Monad               (forM_)
-import           Data.Text                   (Text, toLower, null)
+import           Data.Text                   (Text, toLower, null, length, take)
 import qualified Data.Text as Text
 import           Data.Time.Format            (defaultTimeLocale, formatTime)
 import           Database.Gerippe            (Entity (..), keyToId)
@@ -30,7 +30,7 @@ import           Hosting                     (schnackUrl, mkFileUrl, protocol)
 import           Model                       (Episode (..))
 import qualified GHC.Real as Real
 
-import           Prelude                     ((*), mod, Int, ($), (<>), (-))
+import           Prelude                     ((<), Maybe (..), (*), mod, Int, ($), (<>), (-))
 
 -- TODO
 -- -[ ] custom player to allow css
@@ -41,6 +41,13 @@ import           Prelude                     ((*), mod, Int, ($), (<>), (-))
 
 data Order = OrderDescending | OrderAscending
 data SortBy = SortByDate Order
+
+mkShortTitle :: Episode -> Text
+mkShortTitle Episode{..} =
+  let title = "#" <> episodeCustomIndex <> " " <> episodeTitle
+  in  if length title < 18
+      then title
+      else take 17 title <> "..."
 
 formatDuration :: Int -> Text
 formatDuration d =
@@ -163,10 +170,8 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
   body $ do
     div ! id "header" $ do
       div ! id "title" $ do
-        a ! A.style "visibility:hidden" ! id "toHome" ! href "/" ! A.title "Zurück zur Liste aller veröffentlichten Folgen" $
-          "‹ alle Folgen"
-        h2 $ text "Alle Folgen"
-        div ! id "serendipityworks" $ text "serendipity works"
+        h2 ! id "allEpisodes" $ text "Alle Folgen"
+        div ! id "serendipityworks" $ text "serendipity.works"
       div ! id "gradient" $ ""
     div ! id "content" $ do
       div ! id "searchparameters" $
@@ -203,8 +208,8 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
                 $ "download"
               ")"
 
-episode :: Text -> Episode -> Html
-episode staticLoc Episode{..} = docTypeHtml $ do
+episode :: Text -> Episode -> Maybe Episode -> Maybe Episode -> Html
+episode staticLoc e prev next = docTypeHtml $ do
   head $ do
     meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
     meta ! content "utf-8" ! httpEquiv "encoding"
@@ -215,37 +220,61 @@ episode staticLoc Episode{..} = docTypeHtml $ do
 
     -- Font Awesome 5.13 free content -->
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/FontAwesome/css/all.min.css")
-
   body $ do
     div ! id "header" $ do
       div ! id "title" $ do
-        a ! id "toHome" ! href "/" ! A.title "Zurück zur Liste aller veröffentlichten Folgen" $
-          "‹ alle Folgen"
-        h2 $ text $ "#" <> episodeCustomIndex <> " " <> toLower episodeTitle
-        span ! id "episodeDate" $ string $ formatTime defaultTimeLocale "%b %d, '%y" episodePubdate
-        div ! id "serendipityworks" $ text "serendipity works"
+        div ! id "episodeDate" $ string $ formatTime defaultTimeLocale "%b %d, '%y" (episodePubdate e)
+        h2 ! id "episodeTitle" $ text $ "#" <> episodeCustomIndex e <> " " <> toLower (episodeTitle e)
+        div ! id "serendipityworks" $ text "serendipity.works"
       div ! id "gradient" $ ""
+    div ! id "navigation" $ do
+      div ! id "leftOfPrevious" $ ""
+      div ! id "previous" $
+        case prev of
+          Just prevE ->
+            a ! class_ "pnlink" ! href (textValue $ "/" <> episodeSlug prevE) $ do
+              span ! class_ "pncaption" $ "Vorige Folge"
+              br
+              span ! class_ "pnpubdate" $
+                string $ formatTime defaultTimeLocale "%b %d, '%y" (episodePubdate prevE)
+              br
+              span ! class_ "pntitle" $ text $ mkShortTitle prevE
+          Nothing -> div ! class_ "deactivated" $ "Keine älteren Folgen"
+      div ! id "toHome" $
+        a ! href "/" ! A.title "Zurück zur Liste aller veröffentlichten Folgen" $
+          "Alle Folgen"
+      div ! id "next"  $
+        case next of
+          Just nextE -> do
+            a ! class_ "pnlink" ! href (textValue $ "/" <> episodeSlug nextE) $ do
+              span ! class_ "pncaption" $ "Nächste Folge"
+              br
+              span ! class_ "pnpubdate" $
+                string $ formatTime defaultTimeLocale "%b %d, '%y" (episodePubdate nextE)
+              br
+              span ! class_ "pntitle" $ text $ mkShortTitle nextE
+          Nothing -> div ! class_ "deactivated" $ "Keine neueren Folgen"
     div ! id "body" $
       div ! id "contents" $ do
         div ! id "left" $
-          if null episodeVideoUrl
-          then span ! id "noVideoUrl" $ "No associated video found"
+          if null (episodeVideoUrl e)
+          then div ! class_ "deactivated" $ "No associated video found"
           else "embedded video goes here"
         div ! id "right" $ do
           div ! id "audio" $ do
             audio ! id "single" ! controls "controls" ! preload "none" $
-              source ! src (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
-            div ! class_ "duration" $ text $ "Duration: " <> formatDuration episodeDuration
+              source ! src (textValue $ mkFileUrl staticLoc (episodeFtExtension e) (episodeSlug e))
+            div ! class_ "duration" $ text $ "Duration: " <> formatDuration (episodeDuration e)
             span ! class_ "download" $ do
               "("
-              a ! href (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
-                ! A.title (textValue episodeFtExtension)
+              a ! href (textValue $ mkFileUrl staticLoc (episodeFtExtension e) (episodeSlug e))
+                ! A.title (textValue $ episodeFtExtension e)
                 ! class_ "download"
                 $ "download"
               ")"
-          div ! id "description" $ text episodeDescriptionLong
+          div ! id "description" $ text $ episodeDescriptionLong e
     div ! class_ "comments"
-        ! id (textValue $ "comments-div-" <> episodeSlug)
+        ! id (textValue $ "comments-div-" <> (episodeSlug e))
         $ ""
     script
       ! type_ "text/javascript"

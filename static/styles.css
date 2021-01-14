@@ -28,20 +28,20 @@ h2 {
   margin: 0;
 }
 
-a#toHome {
-  font-size: 12pt;
-  color: var(--anthrazit);
-  text-decoration: none;
+h2#allEpisodes {
+  position: absolute;
+  top: 30px;
 }
 
-a#toHome:hover {
-  color: black;
+h2#episodeTitle {
+  position: relative;
+  top: 12px;
 }
 
 div#header {
   background-color: white;
-  height: 92px;
-  padding-top: 24px;
+  height: 104px;
+  padding-top: 12px;
   min-width: 1024px;
   position: relative;
 }
@@ -56,25 +56,94 @@ div#title {
 
 div#serendipityworks {
   position: absolute;
-  top: -25px;
-  left: 230px;
+  top: -16px;
+  left: 320px;
   color: lightgrey;
-  font-size: 54pt;
+  font-size: 36pt;
 }
 
-span#episodeDate {
-  width: 100px;
-  float: right;
+div#episodeDate {
   color: var(--anthrazit);
-  text-align: right;
   position: relative;
-  top: -20px;
+  top: 12px;
 }
 
 div#gradient {
   background-image: linear-gradient(to right, var(--neon-pink), var(--neon-yellow));
   height: 16px;
-  margin-top: 8px;
+  top: 20px;
+  position: absolute;
+  width: 100%;
+  top: 82px;
+}
+
+div#navigation {
+  background-color: white;
+  border-radius: 20px;
+  width: 984px; /* 1024px (width of div#body) - 2 * 8px (border-spacing of div#body) - 2 * 12px (padding) */
+  height: 85px;
+  padding: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+}
+
+div#navigation div {
+  overflow: hidden;
+  height: 60px;
+  float: left;
+  padding: 10px;
+}
+
+span.pncaption {
+  color: gray;
+}
+
+span.pntitle {
+  font-weight: bold;
+  color: black;
+}
+
+span.pnpubdate {
+  color: black;
+}
+
+div#leftOfPrevious {
+  width: 290px;
+}
+
+div#previous {
+  border-right: solid 1px lightgray;
+  width: 120px;
+}
+
+div#previous a {
+  text-decoration: none;
+}
+
+div#toHome {
+  text-align: center;
+  font-size: 14pt;
+  margin-top: 12px;
+  width: 80px;
+}
+
+div#toHome a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+div#toHome a:hover {
+  text-decoration: underline;
+}
+
+div#next {
+  border-left: solid 1px lightgray;
+  width: 120px;
+}
+
+div#next a {
+  text-decoration: none;
 }
 
 div#body {
@@ -100,7 +169,9 @@ div#left {
   text-align: center;
 }
 
-span#noVideoUrl {
+div.deactivated {
+  vertical-align: middle;
+  text-align: center;
   color: gray;
 }
 
@@ -131,7 +202,7 @@ div#description {
 
 div.comments {
   background-color: white;
-  width:992px;
+  width:984px; /* 1024px (width of div#body) - 2 * 8px (border-spacing of div#body) - 2 * 12px (padding) */
   margin-left: auto;
   margin-right: auto;
   border-radius: 20px;

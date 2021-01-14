@@ -23,7 +23,7 @@ import           Control.Monad.Trans.Resource  (runResourceT)
 import           Data.ByteString               (ByteString)
 import qualified Data.ByteString.Lazy          as Lazy
 import           Data.Foldable                 (foldl')
-import           Data.List                     (length, sortBy, sortOn)
+import           Data.List                     (length, sortBy, sortOn, findIndex, (!!))
 import           Data.Ord                      (Down (..), comparing)
 import           Data.Pool                     (Pool)
 import           Data.Text                     (Text, replace, toUpper, words)
@@ -73,7 +73,7 @@ import           Html                          (Order (..), SortBy (..))
 import qualified Html
 import qualified Model
 
-import           Prelude                       (Bool (..), FilePath, IO, Int,
+import           Prelude                       ((+), Bool (..), FilePath, IO, Int,
                                                 Maybe (..), String, div, flip,
                                                 fromIntegral, map, maybe, mod,
                                                 putStrLn, return, show, ($),
@@ -99,9 +99,16 @@ app state = serve api $ hoistServer api (flip runReaderT state) $
 handleEpisode :: Text -> Maybe Text -> Handler Lazy.ByteString
 handleEpisode slug timeStamp = do
   staticLoc <- asks cfgStaticLoc
-  runDb (getBy $ Model.UniqueSlug slug) >>= \case
-    Just (Entity _ episode) -> pure $ renderHtml $ Html.episode staticLoc episode
-    Nothing                 -> throwError $ err404 { errBody = "episode not found" }
+  episodes <- runDb getAllValues
+  i <- case findIndex (\e -> episodeSlug e == slug) episodes of
+    Just i  -> pure i
+    Nothing -> throwError $ err404 { errBody = "episode not found" }
+  let (prev, next) =
+        if i == 0 then (Nothing, Just $ episodes !! 1)
+        else if i + 1 == length episodes then (Just $ episodes !! (i - 1), Nothing)
+        else (Just $ episodes !! (i - 1), Just $ episodes !! (i + 1))
+  let episode = episodes !! i
+  pure $ renderHtml $ Html.episode staticLoc episode prev next
 
 handleHomepage :: Maybe Api.SortBy -> Maybe Api.Order -> Handler Lazy.ByteString
 handleHomepage mSortBy mOrder = do

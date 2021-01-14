@@ -24,6 +24,7 @@ Episode
   slug             Text
   UniqueSlug slug
   customIndex      Text
+  UniqueCustomIndex customIndex
   ftExtension      Text
   audioContentType Text
   thumbnailFile    FilePath

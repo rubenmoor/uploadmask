@@ -29,4 +29,4 @@ mkFileUrl staticLoc filetypeExtension slug =
       <> slug <> filetypeExtension
 
 schnackUrl :: Text
-schnackUrl = "https://schnack.serendipity/embed.js"
+schnackUrl = "https://schnack.serendipity.works/embed.js"
