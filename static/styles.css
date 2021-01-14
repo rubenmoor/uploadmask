@@ -114,7 +114,7 @@ div#leftOfPrevious {
 
 div#previous {
   border-right: solid 1px lightgray;
-  width: 120px;
+  width: 140px;
 }
 
 div#previous a {
@@ -139,7 +139,7 @@ div#toHome a:hover {
 
 div#next {
   border-left: solid 1px lightgray;
-  width: 120px;
+  width: 140px;
 }
 
 div#next a {
@@ -211,12 +211,16 @@ div.comments {
 
 /* schnack comments */
 
-
 div.schnack-comment-inner {
-  background-color: gray;
-  padding: 10px 10px 0px 10px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  min-height: 60px;
+}
+
+ul.schnack-comments {
+  list-style-type: none;
+}
+
+li.schnack-comment {
+  border-top: 1px solid var(--neon-yellow);
 }
 
 div.comments div.schnack-settings {
@@ -240,11 +244,13 @@ button.schnack-action:hover {
 
 button.schnack-send-comment {
   padding: 8px;
-  border: 1px solid gray;
   border-radius: 8px;
+  background-color: var(--neon-pink);
+  color: white;
+  border: none;
 }
 button.schnack-send-comment:hover {
-  background-color: gray;
+  font-weight: bold;
 }
 
 button.schnack-preview {
@@ -279,18 +285,26 @@ button.schnack-write:hover {
 
 button.schnack-reply {
   border: none;
-  background-color: gray;
   float: right;
   color: var(--link);
+  font-size: 8pt;
+  background-color: inherit;
+  cursor: pointer;
 }
+
 button.schnack-reply:hover {
   text-decoration: underline;
 }
 
+button.schnack-reply::after {
+  content: ' ';
+}
+
 div.schnack-dateline {
+  color: gray;
   font-weight: bold;
-  padding: 4px;
   text-align: right;
+  float: right;
 }
 
 span.schnack-date a {
@@ -304,9 +318,9 @@ span.schnack-date a:hover {
 
 blockquote.schnack-body {
   background-color: inherit;
-  padding: 5px;
   border-style: none;
   margin: -10px 0px 0px 0px;
+  min-width: 42px;
 }
 
 textarea.schnack-body {
@@ -327,6 +341,13 @@ button.schnack-signin:hover {
   color: var(--link)
 }
 
+a.schnack-signout {
+  text-decoration: none;
+}
+
+a.schnack-signout:hover {
+  text-decoration: underline;
+}
 
 /* episode list */
 

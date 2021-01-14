@@ -44,7 +44,7 @@ data SortBy = SortByDate Order
 
 mkShortTitle :: Episode -> Text
 mkShortTitle Episode{..} =
-  let title = "#" <> episodeCustomIndex <> " " <> episodeTitle
+  let title = toLower $ "#" <> episodeCustomIndex <> " " <> episodeTitle
   in  if length title < 18
       then title
       else take 17 title <> "..."
@@ -116,6 +116,7 @@ uploadForm staticLoc today currentIndex =
       link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
       link ! rel "preconnect" ! href "https://fonts.gstatic.com"
       link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
+      link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
       script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
       script myScript
     body $
@@ -167,6 +168,7 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
     link ! rel "preconnect" ! href "https://fonts.gstatic.com"
     link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
+    link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
   body $ do
     div ! id "header" $ do
       div ! id "title" $ do
@@ -217,6 +219,7 @@ episode staticLoc e prev next = docTypeHtml $ do
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
     link ! rel "preconnect" ! href "https://fonts.gstatic.com"
     link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
+    link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
 
     -- Font Awesome 5.13 free content -->
     link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/FontAwesome/css/all.min.css")
@@ -232,7 +235,9 @@ episode staticLoc e prev next = docTypeHtml $ do
       div ! id "previous" $
         case prev of
           Just prevE ->
-            a ! class_ "pnlink" ! href (textValue $ "/" <> episodeSlug prevE) $ do
+            a ! class_ "pnlink"
+              ! href (textValue $ "/" <> episodeSlug prevE)
+              ! A.title (textValue $ episodeTitle prevE) $ do
               span ! class_ "pncaption" $ "Vorige Folge"
               br
               span ! class_ "pnpubdate" $
@@ -246,7 +251,9 @@ episode staticLoc e prev next = docTypeHtml $ do
       div ! id "next"  $
         case next of
           Just nextE -> do
-            a ! class_ "pnlink" ! href (textValue $ "/" <> episodeSlug nextE) $ do
+            a ! class_ "pnlink"
+              ! href (textValue $ "/" <> episodeSlug nextE)
+              ! A.title (textValue $ episodeTitle nextE) $ do
               span ! class_ "pncaption" $ "Nächste Folge"
               br
               span ! class_ "pnpubdate" $

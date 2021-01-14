@@ -207,7 +207,7 @@ getEpisodeFeedData staticLoc Model.Episode{..} =
       efdPageUrl = protocol <> podcastLink <> "/" <> efdSlug
       efdTitle = episodeTitle
       efdThumbnailFile = mediaLink staticLoc <> "/" <>
-        if episodeThumbnailFile == "" then "microphone.jpg"
+        if episodeThumbnailFile == "" then "podcast-logo.jpg"
         else Text.pack episodeThumbnailFile
       efdDescription = episodeDescriptionShort
       efdAudioContentType = episodeAudioContentType
@@ -227,7 +227,7 @@ handleFeedXML = do
   episodeList <- runDb getAllValues
   let contents = renderMarkup (
         let title = "völlig irrelevant" :: Text
-            img = "microphone.jpg" :: Text
+            img = "podcast-logo.jpg" :: Text
             imgUrl = mediaLink staticLoc <> "/" <> img
             description = "Wir reden hier über Themen" :: Text
             copyright = "Rubm & Luke" :: Text
@@ -331,6 +331,7 @@ convertToFilename str =
             , ("?", "_")
             , ("!", "_")
             , (".", "_")
+            , (",", "_")
             , (";", "_")
             , (":", "_")
             , ("'", "_")
