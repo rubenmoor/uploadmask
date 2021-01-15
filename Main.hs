@@ -226,7 +226,7 @@ handleFeedXML = do
   staticLoc <- asks cfgStaticLoc
   episodeList <- runDb getAllValues
   let contents = renderMarkup (
-        let title = "völlig irrelevant" :: Text
+        let title = "full serendipity" :: Text
             img = "podcast-logo.jpg" :: Text
             imgUrl = mediaLink staticLoc <> "/" <> img
             description = "Wir reden hier über Themen" :: Text
