@@ -213,6 +213,8 @@ div.comments {
 
 div.schnack-comment-inner {
   min-height: 60px;
+  max-width: 480px;
+  border-top: 1px solid var(--neon-pink);
 }
 
 ul.schnack-comments {
@@ -220,7 +222,7 @@ ul.schnack-comments {
 }
 
 li.schnack-comment {
-  border-top: 1px solid var(--neon-yellow);
+  clear: both;
 }
 
 div.comments div.schnack-settings {
@@ -234,23 +236,36 @@ div.schnack-form br {
 
 button.schnack-action {
   border: none;
-  background-color: inherit;
+  background-color: var(--neon-pink);
   display: inline-block;
+  border-radius: 12px;
+  color: white;
 }
 
-button.schnack-action:hover {
-  text-decoration: underline;
+div.schnack-login-status {
+  margin: 0 12px;
+}
+
+div.schnack-above {
+  margin: 0 12px;
+  max-width: 640px;
+}
+
+div.schnack-settings {
+  margin: 0 12px;
 }
 
 button.schnack-send-comment {
-  padding: 8px;
-  border-radius: 8px;
-  background-color: var(--neon-pink);
-  color: white;
-  border: none;
+  padding: 4px;
+  border-radius: 16px;
+  border: 1px solid var(--neon-pink);
+  color: var(--neon-pink);
+  width: 90px;
+  background-color: white;
 }
 button.schnack-send-comment:hover {
-  font-weight: bold;
+  background-color: var(--neon-pink);
+  color: white;
 }
 
 button.schnack-preview {
@@ -329,6 +344,10 @@ textarea.schnack-body {
   width: 95%;
   border: 1px solid gray;
   border-radius: 8px;
+}
+
+div.schnack-signin {
+  margin: 0 12px;
 }
 
 button.schnack-signin {

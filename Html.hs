@@ -110,13 +110,7 @@ uploadForm :: Text -> Text -> Text -> Html
 uploadForm staticLoc today currentIndex =
   docTypeHtml $ do
     head $ do
-      meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
-      meta ! content "utf-8" ! httpEquiv "encoding"
-      title "Upload new episode"
-      link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
-      link ! rel "preconnect" ! href "https://fonts.gstatic.com"
-      link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
-      link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
+      htmlHead staticLoc
       script ! src "https://unpkg.com/mediainfo.js@0.1.4/dist/mediainfo.min.js" $ ""
       script myScript
     body $
@@ -161,14 +155,7 @@ uploadForm staticLoc today currentIndex =
 
 homepage :: Text -> [Episode] -> SortBy -> Html
 homepage staticLoc episodes sortBy = docTypeHtml $ do
-  head $ do
-    meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
-    meta ! content "utf-8" ! httpEquiv "encoding"
-    title "Völlig irrelevant - Der Podcast"
-    link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
-    link ! rel "preconnect" ! href "https://fonts.gstatic.com"
-    link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
-    link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
+  head $ htmlHead staticLoc
   body $ do
     div ! id "header" $ do
       div ! id "title" $ do
@@ -212,17 +199,7 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
 
 episode :: Text -> Episode -> Maybe Episode -> Maybe Episode -> Html
 episode staticLoc e prev next = docTypeHtml $ do
-  head $ do
-    meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
-    meta ! content "utf-8" ! httpEquiv "encoding"
-    title "Völlig irrelevant - Der Podcast"
-    link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
-    link ! rel "preconnect" ! href "https://fonts.gstatic.com"
-    link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
-    link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
-
-    -- Font Awesome 5.13 free content -->
-    link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/FontAwesome/css/all.min.css")
+  head $ htmlHead staticLoc
   body $ do
     div ! id "header" $ do
       div ! id "title" $ do
@@ -303,3 +280,15 @@ episode staticLoc e prev next = docTypeHtml $ do
       ! dataAttribute "schnack-partial-admin-approval" "Waiting for approval"
       ! dataAttribute "schnack-partial-waiting-for-approval" "Dein Kommentar wird in Kürze freigegeben."
       $ ""
+
+htmlHead :: Text -> Html
+htmlHead staticLoc = do
+  meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
+  meta ! content "utf-8" ! httpEquiv "encoding"
+  title "serendipity works - Der Podcast"
+  link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
+  link ! rel "preconnect" ! href "https://fonts.gstatic.com"
+  link ! href "https://fonts.googleapis.com/css2?family=Abel&display=swap" ! rel "stylesheet"
+  link ! rel "shortcut icon" ! href "https://podcast-static.serendipity.works/favicon.ico"
+  -- Font Awesome 5.13 free content -->
+  link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/FontAwesome/css/all.min.css")
