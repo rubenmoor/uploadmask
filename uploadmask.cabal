@@ -24,7 +24,7 @@ executable uploadmask
                      , Html
                      , Model
   -- other-extensions:
-  build-depends:       base >=4.12 && <= 4.13
+  build-depends:       base
                      , blaze-markup
                      , blaze-html
                      , bytestring
@@ -35,11 +35,12 @@ executable uploadmask
                      , http-media
                      , monad-logger
                      , mtl
+                     , mysql
                      , network
                      , optparse-applicative
                      , persistent
                      , persistent-template
-                     , persistent-mysql-haskell
+                     , persistent-mysql
                      , raw-strings-qq
                      , resource-pool
                      , resourcet

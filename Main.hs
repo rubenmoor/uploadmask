@@ -21,9 +21,12 @@ import           Control.Monad.Trans.Reader    (Reader, ReaderT, asks,
                                                 runReaderT)
 import           Control.Monad.Trans.Resource  (runResourceT)
 import           Data.ByteString               (ByteString)
+import qualified Data.ByteString.Char8 as Char8
+import           Database.MySQL.Base.Types    (Option (CharsetName))
 import qualified Data.ByteString.Lazy          as Lazy
 import           Data.Foldable                 (foldl')
-import           Data.List                     (length, sortBy, sortOn, findIndex, (!!))
+import           Data.List                     (findIndex, length, sortBy,
+                                                sortOn, (!!))
 import           Data.Ord                      (Down (..), comparing)
 import           Data.Pool                     (Pool)
 import           Data.Text                     (Text, replace, toUpper, words)
@@ -35,9 +38,10 @@ import           Data.Time.Format              (defaultTimeLocale, formatTime,
                                                 parseTimeM, rfc822DateFormat)
 import           Data.Time.LocalTime           (getZonedTime)
 import           Database.Persist              (insert)
-import           Database.Persist.MySQL        (MySQLConnectInfo, SqlBackend,
-                                                SqlPersistT, mkMySQLConnectInfo,
-                                                runSqlPool, withMySQLPool)
+import           Database.Persist.MySQL        (SqlBackend, SqlPersistT,
+                                                defaultConnectInfo,
+                                                runSqlPool, ConnectInfo (..),
+                                                withMySQLPool)
 import qualified Database.Persist.MySQL        as MySQL
 import           Model                         (Episode (..), migrateAll)
 import           Network.Socket                (HostName)
@@ -73,12 +77,12 @@ import           Html                          (Order (..), SortBy (..))
 import qualified Html
 import qualified Model
 
-import           Prelude                       ((+), Bool (..), FilePath, IO, Int,
+import           Prelude                       (Bool (..), FilePath, IO, Int,
                                                 Maybe (..), String, div, flip,
                                                 fromIntegral, map, maybe, mod,
                                                 putStrLn, return, show, ($),
-                                                (*), (-), (.), (/), (/=), (<$>),
-                                                (<>), (==), (>>=))
+                                                (*), (+), (-), (.), (/), (/=),
+                                                (<$>), (<>), (==), (>>=))
 
 data AppConfig = AppConfig
     { cfgPool      :: Pool SqlBackend
@@ -312,7 +316,13 @@ main = do
     <> progDesc "Welcome to the homepage server of the podcast project"
     )
   putStrLn $ "Serving at port " <> show optPort
-  let connectInfo = mkMySQLConnectInfo optHost optUser optPwd optDbName
+  let connectInfo = defaultConnectInfo
+        { connectHost = optHost
+        , connectUser = Char8.unpack optUser
+        , connectPassword = Char8.unpack optPwd
+        , connectDatabase = Char8.unpack optDbName
+        , connectOptions = [ CharsetName "utf8mb4" ]
+        }
   runNoLoggingT $  withMySQLPool connectInfo 10 $ \pool -> do
     runResourceT $ flip runSqlPool pool $ MySQL.runMigration migrateAll
     let config = AppConfig

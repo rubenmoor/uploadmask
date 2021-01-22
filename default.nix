@@ -1,10 +1,10 @@
 { mkDerivation, base, blaze-html, blaze-markup, bytestring
 , directory, filepath, gerippe, heterocephalus, http-media
-, monad-logger, mtl, optparse-applicative, persistent
-, persistent-mysql-haskell, persistent-template, raw-strings-qq
+, monad-logger, mtl, mysql, network, optparse-applicative
+, persistent, persistent-mysql, persistent-template, raw-strings-qq
 , resource-pool, resourcet, safe, servant, servant-multipart
-, servant-server, stdenv, text, time, timerep, transformers, unix
-, warp
+, servant-server, stdenv, text, text-show, time, timerep
+, transformers, unix, warp
 }:
 mkDerivation {
   pname = "uploadmask";
@@ -14,11 +14,11 @@ mkDerivation {
   isExecutable = true;
   executableHaskellDepends = [
     base blaze-html blaze-markup bytestring directory filepath gerippe
-    heterocephalus http-media monad-logger mtl optparse-applicative
-    persistent persistent-mysql-haskell persistent-template
-    raw-strings-qq resource-pool resourcet safe servant
-    servant-multipart servant-server text time timerep transformers
-    unix warp
+    heterocephalus http-media monad-logger mtl mysql network
+    optparse-applicative persistent persistent-mysql
+    persistent-template raw-strings-qq resource-pool resourcet safe
+    servant servant-multipart servant-server text text-show time
+    timerep transformers unix warp
   ];
   license = "unknown";
   hydraPlatforms = stdenv.lib.platforms.none;

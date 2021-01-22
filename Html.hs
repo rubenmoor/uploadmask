@@ -243,7 +243,7 @@ episode staticLoc e prev next = docTypeHtml $ do
         div ! id "left" $
           if null (episodeVideoUrl e)
           then div ! class_ "deactivated" $ "No associated video found"
-          else "embedded video goes here"
+          else iframe ! width "580" ! height "420" ! src (textValue $ episodeVideoUrl e) $ ""
         div ! id "right" $ do
           div ! id "audio" $ do
             audio ! id "single" ! controls "controls" ! preload "none" $
@@ -283,7 +283,7 @@ episode staticLoc e prev next = docTypeHtml $ do
 
 htmlHead :: Text -> Html
 htmlHead staticLoc = do
-  meta ! content "text/html;charset=utf-8" ! httpEquiv "Content-Type"
+  meta ! content "text/html;charset=utf-8" ! httpEquiv "content-type"
   meta ! content "utf-8" ! httpEquiv "encoding"
   title "serendipity works - Der Podcast"
   link ! rel "stylesheet" ! href (textValue $ staticLoc <> "/styles.css")
