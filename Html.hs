@@ -194,6 +194,7 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
               a ! href (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
                 ! A.title (textValue episodeFtExtension)
                 ! class_ "download"
+                ! customAttribute "download" (textValue episodeSlug)
                 $ "download"
               ")"
 
@@ -243,7 +244,11 @@ episode staticLoc e prev next = docTypeHtml $ do
         div ! id "left" $
           if null (episodeVideoUrl e)
           then div ! class_ "deactivated" $ "No associated video found"
-          else iframe ! width "580" ! height "420" ! src (textValue $ episodeVideoUrl e) $ ""
+          else iframe ! width "580"
+                      ! height "420"
+                      ! src (textValue $ episodeVideoUrl e)
+                      ! customAttribute "allow" "fullscreen"
+                      $ ""
         div ! id "right" $ do
           div ! id "audio" $ do
             audio ! id "single" ! controls "controls" ! preload "none" $
@@ -254,6 +259,7 @@ episode staticLoc e prev next = docTypeHtml $ do
               a ! href (textValue $ mkFileUrl staticLoc (episodeFtExtension e) (episodeSlug e))
                 ! A.title (textValue $ episodeFtExtension e)
                 ! class_ "download"
+                ! customAttribute "download" (textValue episodeSlug)
                 $ "download"
               ")"
           div ! id "description" $ text $ episodeDescriptionLong e

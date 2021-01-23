@@ -169,6 +169,11 @@ div#left {
   text-align: center;
 }
 
+div#left iframe {
+  border: none;
+  border-radius: 12px;
+}
+
 div.deactivated {
   vertical-align: middle;
   text-align: center;
