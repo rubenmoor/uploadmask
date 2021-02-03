@@ -40,10 +40,10 @@ h2#episodeTitle {
 
 div#header {
   background-color: white;
-  height: 104px;
+  height: 116px;
   padding-top: 12px;
-  min-width: 1024px;
   position: relative;
+  margin-bottom: -22px;
 }
 
 div#title {
@@ -75,6 +75,20 @@ div#gradient {
   position: absolute;
   width: 100%;
   top: 82px;
+}
+
+div#platformlinks {
+  position: relative;
+  width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  top: -2px;
+  left: 10px;
+}
+
+div#platformlinks i {
+  color: var(--anthrazit);
+  padding-right: 5px;
 }
 
 div#navigation {

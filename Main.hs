@@ -71,7 +71,7 @@ import           Database.Gerippe              (BaseBackend, Entity (..),
                                                 getAllValues, getBy, getWhere,
                                                 keyToId, orderBy, select, (%),
                                                 (^.))
-import           Hosting                       (mediaLink, mkFileUrl,
+import           Hosting                       (mkFileUrl,
                                                 podcastLink, protocol)
 import           Html                          (Order (..), SortBy (..))
 import qualified Html
@@ -210,7 +210,7 @@ getEpisodeFeedData staticLoc Model.Episode{..} =
       efdAudioFileUrl = mkFileUrl staticLoc efdFtExtension efdSlug
       efdPageUrl = protocol <> podcastLink <> "/" <> efdSlug
       efdTitle = episodeTitle
-      efdThumbnailFile = mediaLink staticLoc <> "/" <>
+      efdThumbnailFile = staticLoc <> "/" <>
         if episodeThumbnailFile == "" then "podcast-logo.jpg"
         else Text.pack episodeThumbnailFile
       efdDescription = episodeDescriptionShort
@@ -232,7 +232,7 @@ handleFeedXML = do
   let contents = renderMarkup (
         let title = "full serendipity" :: Text
             img = "podcast-logo.jpg" :: Text
-            imgUrl = mediaLink staticLoc <> "/" <> img
+            imgUrl = staticLoc <> "/" <> img
             description = "Wir reden hier über Themen" :: Text
             copyright = "Rubm & Luke" :: Text
             email = "luke.rubm@gmail.com (Luke & Rubm)" :: Text

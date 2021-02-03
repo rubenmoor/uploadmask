@@ -153,6 +153,18 @@ uploadForm staticLoc today currentIndex =
           span ! id "errorMessage" ! A.style "color: red" $ ""
           button ! type_ "button" ! onclick "formSubmit()" ! autofocus "autofocus" $ "submit"
 
+platformLinks =
+  div ! id "platformlinks" $ do
+    a ! href "https://t.me/fullserendipity"
+      ! A.title "Join our telegram channel" $
+      i ! class_ "fab fa-telegram" $ ""
+    a ! href "https://open.spotify.com/show/74AvChSw5sZM9kOIpWt040?si=L8TwbVb8SQOPcFxRVgNqBQ"
+      ! A.title "Listen on Spotify" $
+      i ! class_ "fab fa-spotify" $ ""
+    a ! href "/feed.xml"
+      ! A.title "Get the rss-feed" $
+      i ! class_ "fas fa-rss" $ ""
+
 homepage :: Text -> [Episode] -> SortBy -> Html
 homepage staticLoc episodes sortBy = docTypeHtml $ do
   head $ htmlHead staticLoc
@@ -162,6 +174,7 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
         h2 ! id "allEpisodes" $ text "Alle Folgen"
         div ! id "serendipityworks" $ text "serendipity.works"
       div ! id "gradient" $ ""
+    platformLinks
     div ! id "content" $ do
       div ! id "searchparameters" $
         case sortBy of
@@ -208,6 +221,7 @@ episode staticLoc e prev next = docTypeHtml $ do
         h2 ! id "episodeTitle" $ text $ "#" <> episodeCustomIndex e <> " " <> toLower (episodeTitle e)
         div ! id "serendipityworks" $ text "serendipity.works"
       div ! id "gradient" $ ""
+    platformLinks
     div ! id "navigation" $ do
       div ! id "leftOfPrevious" $ ""
       div ! id "previous" $
@@ -259,7 +273,7 @@ episode staticLoc e prev next = docTypeHtml $ do
               a ! href (textValue $ mkFileUrl staticLoc (episodeFtExtension e) (episodeSlug e))
                 ! A.title (textValue $ episodeFtExtension e)
                 ! class_ "download"
-                ! customAttribute "download" (textValue episodeSlug)
+                ! customAttribute "download" (textValue $ episodeSlug e)
                 $ "download"
               ")"
           div ! id "description" $ text $ episodeDescriptionLong e
