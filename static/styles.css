@@ -222,6 +222,7 @@ div#description {
   height: 344px;
   padding: 12px;
   margin-top: 8px;
+  white-space: pre-wrap;
 }
 
 div.comments {
@@ -504,6 +505,7 @@ div.belowDescription {
 
 div.description {
   margin: 12px;
+  white-space: pre-wrap;
 }
 
 div.footer {
