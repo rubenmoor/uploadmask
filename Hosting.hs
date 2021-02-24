@@ -30,3 +30,9 @@ mkFileUrl staticLoc filetypeExtension slug =
 
 schnackUrl :: Text
 schnackUrl = "https://schnack.serendipity.works/embed.js"
+
+spotifyUrl :: Text
+spotifyUrl = "https://open.spotify.com/show/74AvChSw5sZM9kOIpWt040?si=L8TwbVb8SQOPcFxRVgNqBQ"
+
+telegramUrl :: Text
+telegramUrl = "https://t.me/fullserendipity"

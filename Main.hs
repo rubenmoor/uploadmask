@@ -98,7 +98,13 @@ app state = serve api $ hoistServer api (flip runReaderT state) $
   :<|> handleUploadForm
   :<|> handleUpload
   :<|> handleHomepage
+  :<|> handlePlatforms
   :<|> handleEpisode
+
+handlePlatforms :: Handler Lazy.ByteString
+handlePlatforms = do
+  staticLoc <- asks cfgStaticLoc
+  pure $ renderHtml $ Html.platforms staticLoc
 
 handleEpisode :: Text -> Maybe Text -> Handler Lazy.ByteString
 handleEpisode slug timeStamp = do

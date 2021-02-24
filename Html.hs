@@ -7,6 +7,7 @@ module Html
   ( uploadForm
   , homepage
   , episode
+  , platforms
   , formatDuration
   , SortBy (..)
   , Order (..)
@@ -17,20 +18,17 @@ import           Control.Monad               (forM_)
 import           Data.Text                   (Text, toLower, null, length, take)
 import qualified Data.Text as Text
 import           Data.Time.Format            (defaultTimeLocale, formatTime)
-import           Database.Gerippe            (Entity (..), keyToId)
-import           Text.Blaze.Html             (Html)
 import           Text.Blaze.Html5
 import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
                                               title)
 import qualified Text.Blaze.Html5.Attributes as A
 import           Text.RawString.QQ
-import           TextShow                    (showt)
 
-import           Hosting                     (schnackUrl, mkFileUrl, protocol)
+import           Hosting                     (schnackUrl, mkFileUrl, telegramUrl, spotifyUrl)
 import           Model                       (Episode (..))
 import qualified GHC.Real as Real
 
-import           Prelude                     ((<), Maybe (..), (*), mod, Int, ($), (<>), (-))
+import           Prelude                     ((<), Maybe (..), (*), mod, Int, ($), (<>))
 
 -- TODO
 -- -[ ] custom player to allow css
@@ -155,10 +153,10 @@ uploadForm staticLoc today currentIndex =
 
 platformLinks =
   div ! id "platformlinks" $ do
-    a ! href "https://t.me/fullserendipity"
+    a ! href (textValue telegramUrl)
       ! A.title "Join our telegram channel" $
       i ! class_ "fab fa-telegram" $ ""
-    a ! href "https://open.spotify.com/show/74AvChSw5sZM9kOIpWt040?si=L8TwbVb8SQOPcFxRVgNqBQ"
+    a ! href (textValue spotifyUrl)
       ! A.title "Listen on Spotify" $
       i ! class_ "fab fa-spotify" $ ""
     a ! href "/feed.xml"
@@ -210,6 +208,52 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
                 ! customAttribute "download" (textValue episodeSlug)
                 $ "download"
               ")"
+
+platforms :: Text -> Html
+platforms staticLoc = docTypeHtml $ do
+  head $ htmlHead staticLoc
+  body $ do
+    div ! id "header" $ do
+      div ! id "title" $ do
+        h2 ! id "platforms" $ text "Wo du uns findest"
+        div ! id "serendipityworks" $ text "serendipity.works"
+      div ! id "gradient" $ ""
+    platformLinks
+    div ! id "content" $ do
+      div ! id "platforms" $ do
+        span $ do
+          text "„Komm mit und folge mir nach.“ —"
+          em "Johannes 1:43"
+        a ! class_ "platform"
+          ! href (textValue spotifyUrl)
+          ! A.title "Open Spotify"
+          $ do
+          platformImg "Spotify.png"
+          div "Alle Episoden auf Spotify anhören"
+        a ! class_ "platform"
+          ! href (textValue telegramUrl)
+          ! A.title  "Open Telegram"
+          $ do
+          platformImg "telegram.png"
+          div "Alle Episoden noch schneller im Telegram-Channel anhören, plus Zusatzinfos"
+        a ! class_ "platform"
+          ! href "/feed.xml"
+          ! A.title "Open RSS feed"
+          $ do
+          platformImg "rssfeed.png"
+          div "Den Podcast-Feed manuell in der Podcast-App deiner Wahl abonnieren"
+        a ! class_ "platform"
+          ! href "/"
+          ! A.title "Homepage"
+          $ do
+          platformImg "podcast-logo.jpg"
+          div "Mit Video anschauen und kommentieren: auf unser Homepage"
+        br ! A.style "clear: both"
+  where
+    platformImg filename =
+      img ! src (textValue $ staticLoc <> "/" <> filename)
+          ! width "60px"
+          ! height "60px"
 
 episode :: Text -> Episode -> Maybe Episode -> Maybe Episode -> Html
 episode staticLoc e prev next = docTypeHtml $ do
@@ -283,7 +327,7 @@ episode staticLoc e prev next = docTypeHtml $ do
     script
       ! type_ "text/javascript"
       ! src (textValue schnackUrl)
-      ! dataAttribute "schnack-target-class" ".comments"
+
       ! dataAttribute "schnack-target" ".comments"
       ! dataAttribute "schnack-slug" "rubm-luke"
       ! dataAttribute "schnack-partial-sign-in-via" "Zum Kommentieren anmelden"

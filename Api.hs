@@ -59,8 +59,9 @@ instance FromMultipart Tmp EpisodeUpload where
 type API = "feed.xml" :> Get '[XML] Lazy.ByteString
       :<|> "upload"   :> Get '[HTML] Lazy.ByteString
       :<|> "upload"   :> MultipartForm Tmp EpisodeUpload :> Post '[PlainText] String
-      :<|> QueryParam "sortby" SortBy :> QueryParam "order" Order :> Get '[HTML] Lazy.ByteString
-      :<|> Capture "episodeSlug" Text :> QueryParam "t" Text :> Get '[HTML] Lazy.ByteString
+      :<|> QueryParam "sortby" SortBy :> QueryParam "order" Order :> Get '[HTML] Lazy.ByteString -- index.html
+      :<|> "platforms" :> Get '[HTML] Lazy.ByteString -- platforms
+      :<|> Capture "episodeSlug" Text :> QueryParam "t" Text :> Get '[HTML] Lazy.ByteString -- episode
 
 data HTML
 
