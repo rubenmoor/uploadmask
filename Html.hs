@@ -24,7 +24,7 @@ import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
 import qualified Text.Blaze.Html5.Attributes as A
 import           Text.RawString.QQ
 
-import           Hosting                     (schnackUrl, mkFileUrl, telegramUrl, spotifyUrl)
+import           Hosting                     (schnackUrl, mkFileUrl, telegramUrl, spotifyUrl, protocol, podcastLink)
 import           Model                       (Episode (..))
 import qualified GHC.Real as Real
 
@@ -236,12 +236,15 @@ platforms staticLoc = docTypeHtml $ do
           $ do
           platformImg "telegram.png"
           div "Alle Episoden noch schneller im Telegram-Channel anhören, plus Zusatzinfos"
-        a ! class_ "platform"
-          ! href "/feed.xml"
-          ! A.title "Open RSS feed"
-          $ do
+        div ! class_ "platform" $ do
           platformImg "rssfeed.png"
-          div "Den Podcast-Feed manuell in der Podcast-App deiner Wahl abonnieren"
+          div $ do
+            "Den Podcast-Feed kopieren und manuell in die App deiner Wahl einfügen"
+            br
+            input ! value (textValue $ protocol <> podcastLink <> "/feed.xml")
+                  ! readonly "readonly"
+                  ! onclick "select()"
+                  ! size "38"
         a ! class_ "platform"
           ! href "/"
           ! A.title "Homepage"
@@ -328,7 +331,7 @@ episode staticLoc e prev next = docTypeHtml $ do
       ! type_ "text/javascript"
       ! src (textValue schnackUrl)
 
-      ! dataAttribute "schnack-target" ".comments"
+      ! dataAttribute "schnack-target-class" ".comments"
       ! dataAttribute "schnack-slug" "rubm-luke"
       ! dataAttribute "schnack-partial-sign-in-via" "Zum Kommentieren anmelden"
       ! dataAttribute "schnack-partial-login-status" "Angemeldet als <strong>%USER%</strong> (<a class='schnack-signout' href='#'>abmelden</a>)."

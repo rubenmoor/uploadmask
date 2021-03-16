@@ -422,12 +422,12 @@ div#platforms {
   background-color: white;
 }
 
-a.platform img {
+.platform img {
   padding: 20px;
   float: left;
 }
 
-a.platform div {
+.platform div {
   height: 100px;
   display: table-cell;
   vertical-align: middle;
@@ -441,7 +441,7 @@ div#platforms span {
   height: 60px;
 }
 
-a.platform {
+.platform {
   float: left;
   font-size: 16pt;
   padding-left: 40px;
