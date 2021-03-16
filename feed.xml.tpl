@@ -30,7 +30,7 @@
         <itunes:author>#{authors}</itunes:author>
         <itunes:summary>#{itunesSummary}</itunes:summary>
         <itunes:keywords>Philosophie, Moral, Kolumbien</itunes:keywords>
-        <itunes:block>yes</itunes:block>
+        <itunes:block>no</itunes:block>
         <itunes:owner>
             <itunes:name><![CDATA[#{itunesOwnerNames}]]></itunes:name>
             <itunes:email>#{email}</itunes:email>
