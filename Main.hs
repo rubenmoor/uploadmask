@@ -12,11 +12,9 @@
 
 module Main where
 
-import           Control.Applicative           ((*>))
 import           Control.Monad                 (unless, when)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Logger          (NoLoggingT (..), runNoLoggingT)
-import           Control.Monad.Reader          (MonadReader)
 import           Control.Monad.Trans.Reader    (Reader, ReaderT, asks,
                                                 runReaderT)
 import           Control.Monad.Trans.Resource  (runResourceT)

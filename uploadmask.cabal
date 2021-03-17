@@ -42,6 +42,7 @@ executable uploadmask
                      , persistent-template
                      , persistent-mysql
                      , raw-strings-qq
+                     , regex-tdfa
                      , resource-pool
                      , resourcet
                      , safe

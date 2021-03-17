@@ -1,10 +1,12 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Html
-  ( uploadForm
+  ( module Html
+  , uploadForm
   , homepage
   , episode
   , platforms
@@ -13,22 +15,27 @@ module Html
   , Order (..)
   ) where
 
-import           Text.Printf                   (printf)
 import           Control.Monad               (forM_)
-import           Data.Text                   (Text, toLower, null, length, take)
-import qualified Data.Text as Text
+import           Data.Text                   (Text, length, null, take, toLower)
+import qualified Data.Text                   as Text
 import           Data.Time.Format            (defaultTimeLocale, formatTime)
+import           Debug.Trace                 (traceShow)
 import           Text.Blaze.Html5
 import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
                                               title)
 import qualified Text.Blaze.Html5.Attributes as A
+import           Text.Printf                 (printf)
 import           Text.RawString.QQ
+import           Text.Regex.TDFA             ((=~))
 
-import           Hosting                     (schnackUrl, mkFileUrl, telegramUrl, spotifyUrl, protocol, podcastLink)
+import qualified GHC.Real                    as Real
+import           Hosting                     (mkFileUrl, podcastLink, protocol,
+                                              schnackUrl, spotifyUrl,
+                                              telegramUrl)
 import           Model                       (Episode (..))
-import qualified GHC.Real as Real
 
-import           Prelude                     ((<), Maybe (..), (*), mod, Int, ($), (<>))
+import           Prelude                     (Int, Maybe (..), String, error,
+                                              mod, ($), (*), (.), (<), (<>))
 
 -- TODO
 -- -[ ] custom player to allow css
@@ -197,7 +204,7 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
             source ! src (textValue $ mkFileUrl staticLoc episodeFtExtension episodeSlug)
           div ! class_ "duration" $ text $ "Duration: " <> formatDuration episodeDuration
           br ! A.style "clear:both"
-          div ! class_ "description" $ text episodeDescriptionLong
+          div ! class_ "description" $ makeClickableLinks episodeDescriptionLong
           div ! class_ "belowDescription" $ ""
           div ! class_ "footer" $
             span ! class_ "download" $ do
@@ -208,6 +215,21 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
                 ! customAttribute "download" (textValue episodeSlug)
                 $ "download"
               ")"
+
+makeClickableLinks :: Text -> Markup
+makeClickableLinks str = traceShow str $
+    let (prefix, _ :: Text, suffix, groups) =
+          str =~ ([r|([[:space:]]|\`)(https?://[-a-zA-Z0-9._~%!*'();:@&=+$,/?#]+)|] :: Text)
+    in case traceShow groups groups of
+         []       -> text str
+         ws:[url] -> do text $ prefix <> ws
+                        toLink url
+                        makeClickableLinks suffix
+         _       -> error "impossibel" -- toMarkup str -- impossible
+  where
+    toLink s =
+      let inner = if length s < 41 then s else take 37 s <> "..."
+      in  a ! href (textValue s) $ text inner
 
 platforms :: Text -> Html
 platforms staticLoc = docTypeHtml $ do
@@ -323,7 +345,7 @@ episode staticLoc e prev next = docTypeHtml $ do
                 ! customAttribute "download" (textValue $ episodeSlug e)
                 $ "download"
               ")"
-          div ! id "description" $ text $ episodeDescriptionLong e
+          div ! id "description" $ makeClickableLinks $ episodeDescriptionLong e
     div ! class_ "comments"
         ! id (textValue $ "comments-div-" <> (episodeSlug e))
         $ ""
