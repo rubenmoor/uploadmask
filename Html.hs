@@ -19,7 +19,6 @@ import           Control.Monad               (forM_)
 import           Data.Text                   (Text, length, null, take, toLower)
 import qualified Data.Text                   as Text
 import           Data.Time.Format            (defaultTimeLocale, formatTime)
-import           Debug.Trace                 (traceShow)
 import           Text.Blaze.Html5
 import           Text.Blaze.Html5.Attributes hiding (form, label, span, style,
                                               title)
@@ -217,15 +216,15 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
               ")"
 
 makeClickableLinks :: Text -> Markup
-makeClickableLinks str = traceShow str $
+makeClickableLinks str =
     let (prefix, _ :: Text, suffix, groups) =
-          str =~ ([r|([[:space:]]|\`)(https?://[-a-zA-Z0-9._~%!*'();:@&=+$,/?#]+)|] :: Text)
-    in case traceShow groups groups of
-         []       -> text str
-         ws:[url] -> do text $ prefix <> ws
-                        toLink url
-                        makeClickableLinks suffix
-         _       -> error "impossibel" -- toMarkup str -- impossible
+          str =~ ([r|([[:space:]]|\`)(https?://(]|[-a-zA-Z0-9._~%!*'();:@&=+$,/?#[])+)|] :: Text)
+    in case groups of
+         []         -> text str
+         ws:url:[_] -> do text $ prefix <> ws
+                          toLink url
+                          makeClickableLinks suffix
+         _          -> toMarkup str -- impossible
   where
     toLink s =
       let inner = if length s < 41 then s else take 37 s <> "..."
