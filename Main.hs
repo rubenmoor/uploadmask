@@ -126,8 +126,8 @@ handleHomepage mSortBy mOrder = do
         Just Api.SortByDate -> case mOrder of
           Just Api.OrderDescending -> SortByDate OrderDescending
           Just Api.OrderAscending  -> SortByDate OrderAscending
-          Nothing                  -> SortByDate OrderAscending
-        Nothing -> SortByDate OrderAscending
+          Nothing                  -> SortByDate OrderDescending
+        Nothing -> SortByDate OrderDescending
   staticLoc <- asks cfgStaticLoc
   episodes <- case sortBy of
     SortByDate order -> case order of
@@ -215,7 +215,7 @@ getEpisodeFeedData staticLoc Model.Episode{..} =
       efdFtExtension = episodeFtExtension
       efdAudioFileUrl = mkFileUrl staticLoc efdFtExtension efdSlug
       efdPageUrl = protocol <> podcastLink <> "/" <> efdSlug
-      efdTitle = episodeTitle
+      efdTitle =  "#" <> episodeCustomIndex <> " " <> episodeTitle
       efdThumbnailFile = staticLoc <> "/" <>
         if episodeThumbnailFile == "" then "podcast-logo.jpg"
         else Text.pack episodeThumbnailFile
