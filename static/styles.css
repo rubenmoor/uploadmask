@@ -220,9 +220,15 @@ div#description {
   background-color: white;
   border-radius: 20px;
   height: 344px;
-  padding: 12px;
   margin-top: 8px;
   white-space: pre-wrap;
+  padding: 0 12px;
+  overflow-y: auto;
+  border-right: transparent 2px solid;
+  border-top: transparent 20px solid;
+  border-bottom: transparent 20px solid;
+  scrollbar-color: lightgray;
+  scrollbar-width: thin;
 }
 
 div.comments {
