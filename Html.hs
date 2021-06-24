@@ -222,8 +222,8 @@ makeClickableLinks str =
     in case groups of
          []         -> text str
          ws:[url] -> do text $ prefix <> ws
-                          toLink url
-                          makeClickableLinks suffix
+                        toLink url
+                        makeClickableLinks suffix
          _          -> toMarkup str -- impossible
   where
     toLink s =
