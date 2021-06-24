@@ -9,7 +9,7 @@
     <channel>
         <title>#{title}</title>
         <link>#{protocol}#{podcastLink}</link>
-        <language>en-us</language>
+        <language>de-DE</language>
         <atom:link href="#{protocol}#{podcastLink}/feed.xml"
                    rel="self"
                    type="application/rss+xml"/>

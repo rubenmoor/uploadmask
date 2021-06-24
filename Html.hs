@@ -218,10 +218,10 @@ homepage staticLoc episodes sortBy = docTypeHtml $ do
 makeClickableLinks :: Text -> Markup
 makeClickableLinks str =
     let (prefix, _ :: Text, suffix, groups) =
-          str =~ ([r|([[:space:]]|\`)(https?://(]|[-a-zA-Z0-9._~%!*'();:@&=+$,/?#[])+)|] :: Text)
+          str =~ ([r|([[:space:]]|\`)https?://(]|[-a-zA-Z0-9._~%!*'();:@&=+$,/?#[])+|] :: Text)
     in case groups of
          []         -> text str
-         ws:url:[_] -> do text $ prefix <> ws
+         ws:[url] -> do text $ prefix <> ws
                           toLink url
                           makeClickableLinks suffix
          _          -> toMarkup str -- impossible
